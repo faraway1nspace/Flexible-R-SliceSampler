@@ -17,7 +17,7 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
     - whatever probability distribution you code in R, you can use in this Slice Sampler
 - **Intractible Priors** - you have an intractible Prior distribution (and likewise intractible posterior) that can't be normalized  
     - for example, one of our priors was a _mixture distribution_ based on the outputs from  *another* independent model. You can pipe-in any external info you want, so long as you can code-it in R and can sample from it with a `dfunction`-type of log-density.
-- **Penalities on Derived Quantitis** - you want to calculate derived quantities, and place priors on them
+- **Penalities on Derived Quantities** - you want to calculate derived quantities, and place priors on them
     - you want to penalize some quantity that is a *derivative* of your process-parameters
 	- e.g., in ecology's mark-recapture, we often have prior information on derivatives of our statistical models (like we know the population-size isn't 0 nor is it 10000) but these quantities are derivatives, often *not* direct parameters in our likelihood.
 	- regulation can also be thought-of as a penalty on derviative quantities (the $\ell_1$-norm of parameters). See the demos.
@@ -67,9 +67,9 @@ jags_model_syntax <- "model{
 
 ### Syntax in Flexible-R-SliceSampler
 
-We will now re-write the above JAGS ZIPpoisson model as log-posterior **R-functions**. 
+We will now re-write the above JAGS ZIPpoisson model using pure **R-functions** to run the `slice.sample` function. It is easy.
 
-In particular, for each variable (`lambda` and `psi`), we must write a log-posterior function that computes the likelihood and the prior (logged). The posteriors can be **unnormalized**, making it relatively simple to compute (basically, we just the sum of the log-likelihood and log-priors).
+In particular, for each variable (`lambda` and `psi`), we must write a log-posterior function that ingests the data, the prior parameters, and computes the log-likelihood at `x` and the log-prior-density at `x`. Importantly, the posteriors can be **unnormalized**, so we merely have to return the log-likelihood and log-prior-density at `x`.
 
 Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc.:
 
