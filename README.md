@@ -20,6 +20,15 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
     - e.g. let's say a part of your Gibbs-sampling depends on a Hidden-Markov-Model process that is unavailable in JAGS/BUGS
 - **BUGS/JAGS is annoying** - why code in BUGS/JAGS if you can do it better & faster in R?
 
+## Syntax Comparison to JAGS
+
+TODO 
+
+## Files
+
+- `src/flexible_slice_sampler.R` - source code with flexible slice sampler
+- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
+
 
 ## Citation
 
