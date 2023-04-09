@@ -169,19 +169,17 @@ Given a point $x$ and posterior-density function $f(x)$, we:
 6. If not then "shrink" the boundaries L and R:  
     - If $x_{\text{new}} < x$, then $L \leftarrow x_{\text{new}}$ 
 	- Elif $x_{\text{new}} > x$, then $R \leftarrow x_{\text{new}}$ 
-    - Repeat steps 4 to 6 until $f(x_{\text{new}}) > z$
+,    - Repeat steps 4 to 6 until $f(x_{\text{new}}) > z$
 	
 	
 Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point ($L$) and right-most point $L$ where $f=z$. This is the key step called by Neal the "stepping-out procedure. Basically, we move $x$ outward by a step-size $W$ until $f(x-m*W) < z$. The following picture from Wikipedia does a great job describing the stepping-out procedure, and the "shrinkage" procedure of step 6.
 
-**The critical point is that the hyperparameter $W$ must be carefully set**. This is the key thing the user must initially set.
+**The critical point: the user must supply a reasonable value for the $W$**. It should be approximately the size of, say, the inner 68% of the posterior-density. I.e., if the 95%CI of the posterior-density is from -2 to 2, then a good value of W would be 2. `slice.sample` has an automatic way to adjust W once the sampling gets going.
 
 
----
-**NOTE**
+| :memo:        | We have found that the best step-size W is the long-run average of R-L over the entire density. Therefore, we can monitor R and L, and slowly adjust W to the long-run average of R-L |
+|---------------|:------------------------|
 
-We have found that the best step-size W is the long-run average of R-L over the entire density. Therefore, we can monitor R and L, and slowly adjust W to the long-run average of R-L
----
 
 
 
