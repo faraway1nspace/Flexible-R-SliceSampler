@@ -8,6 +8,12 @@ The Slice Sampler (based on Neal 2003) worked so well, I decided to open-source 
 
 Be sure to check out our examples in `demos/`. And be sure to read above the key-parameters below.
 
+## Files
+
+- `src/flexible_slice_sampler.R` - source code with flexible slice sampler
+- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
+- `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
+
 
 ## Motivation: Why use Flexible-R-SliceSampler (vs. JAGS or BUGS)
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
@@ -138,14 +144,6 @@ Each log-posterior density function must have the same arguments:
 The log-posterior functions are collected in a named-list `list_of_log_posteriors`, with an entry for each variable to sample (lambda and psi). The list is passed as an argument `slice.sample` function. 
 
 Read below for more about the other arguments of `slice.sample`. Or, have a look at the following demo files.
-
-
-
-## Files
-
-- `src/flexible_slice_sampler.R` - source code with flexible slice sampler
-- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
-- `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
 
 
 ## Slice Sampling Overview.
