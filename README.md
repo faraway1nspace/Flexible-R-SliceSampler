@@ -154,7 +154,7 @@ Neal (2003) describes a rejection-free method of MCMC sampling for complex multi
 
 **The most important hyperparameter is the STEP-SIZE parametre `W`** -- it is used to laterally "step" arond the univariate-parameter interval of `x` to find good regions of the posterior-density to sample `x`. You'll need to read Neal 2003 to get a better understanding.
 
-In Flexible-R-SliceSampler, we have a good method of automatically adjusting the step-size `W` parameters. However, **the `W` parameters must be carefully watched to ensure they converge on acceptable values, and the sampler doesn't hang, choke, or mix badly. 
+In Flexible-R-SliceSampler, we have a good method of automatically adjusting the step-size `W` parameters. However, **the `W` parameters must be carefully watched** to ensure they converge on acceptable values, and the sampler doesn't hang, choke, or mix badly. 
 
 Usually, if the `W` step-sizes don't converge, there is something _else_ wrong with the model.
 
@@ -162,9 +162,9 @@ Usually, if the `W` step-sizes don't converge, there is something _else_ wrong w
 
 Given a point $x$ and posterior-density function $f(x)$, we:
 - sample $z$ uniformly along vertical from 0 to f(x): $z\sim\text{Unif}(0,f(x))$
-- find the left-most point (L) at which f(L) == z
-- find the right-most point (R) at which f(R) == z
-- sample a new x-star from Unif(L,R). 
+- find the left-most point ($L$) at which $f(L) = z$
+- find the right-most point ($R$) at which $f(R) == z$
+- sample a new $x_{new}$ uniformly between $L$ and $R$ : $x_{new}\sim\mathcal{U}(L,R)$
 - If f(x-star) > 
 
 
