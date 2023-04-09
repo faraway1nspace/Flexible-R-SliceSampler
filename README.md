@@ -23,13 +23,15 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
     - e.g. let's say a part of your Gibbs-sampling depends on a Hidden-Markov-Model process that is unavailable in JAGS/BUGS, like sampling of HMM-states. You can sample from these states outside of the slice sampler using conventional HMM R-code, then run the Slice Sampler conditional on those states as "data", and repeat.
 - **BUGS/JAGS is annoying** - why code in BUGS/JAGS if you can do it better & faster in R?
 
-### Why you Shouldn't use Flexible-R-SliceSampler (vs. JAGS or BUGS)
-- You don't understand likelihoods and can't compute them yourself
-- You have a simple model that is easily run in JAGS 
+### Reasons NOT to use Flexible-R-SliceSampler (vs. JAGS/BUGS)
+- You have a simple model with simple data that is easily run in JAGS/BUGS
+- You're unfamiliar with likelihoods and have difficulty making R-likelihood functions
 
 ## Syntax Comparison to JAGS
 
-Let's run a Zero-Inflated poisson model, with poisson variable `lambda` and zero-inflation variable `psi`. Let's say the data is simply: `y <- c(1,0,0,0,10,0,3,0,0,0,0,0,0,30)`. In JAGS, the model syntax would be:
+Let's run a Zero-Inflated poisson model, with poisson variable `lambda` and zero-inflation variable `psi`. Let's say the data is simply: `y <- c(1,0,0,0,10,0,3,0,0,0,0,0,0,30)`. 
+
+In JAGS, the model syntax would be:
 
 ```R
 jags_model_syntax <- "model{
@@ -51,21 +53,20 @@ jags_model_syntax <- "model{
       lambda1[i] <- lambda*zip[i] + 0.000001 
       # .. NOTICE THE CONSTANT 0.000001 that is necessary to stabilize the ZIPpoisson!
       
-      # poisson likelkhood
+      # poisson likelihood
       y[i] ~ dpois(lambda1[i])
    }
 }
 "
 ```
 
-In the Flexible-R-SliceSampler, we must specify R **functions** for the log-posterior densities for each variable (`lambda` and `psi`).  The posteriors can be **unnormalized**, meaning it is a simple sum of the log-likelihood and log-priors.
+### Syntax in Flexible-R-SliceSampler
 
-The log-posterior R functions are passed to the `slice.sample` function as a named list called `list_of_log_posteriors = list("lambda" =..., "psi"=...)`. Each log-posterior density function must have the same arguments:
-- `x_target`: accepts a candidate value of the variable for that posterior function
-- `x_all`: a named numeric variable with _all_ variables in a vector, to compute the likelihood.
-- `data_likelihood`: a named list with all the data necessary to compute the likellihood (like JAGS, data argument)
-- `prior parmaeters`: a named list, per variable, with its prior-parameters
+We will not write **R-functions** to represent the above JAGS ZIPpoisson process.
 
+In particular, for each variable each variable (`lambda` and `psi`), we must write a log-posterior densities function. The posteriors can be **unnormalized**, making it relatively simple to compute.(basically just the sum of the log-likelihood and log-priors).
+
+Here are the log-posterior functions for `lambda` and `psi`:
 
 ```R
 # log posterior with log-normal density on lambda
@@ -112,8 +113,26 @@ log_posterior_zippsi <- function(x_target,
         log=TRUE
     )
     return(loglike + log_prior)}
-```
+	
 
+# collect log-posterior functions in a named-list
+list_of_log_posteriors = list(
+    "lambda" = log_posterior_ziplambda,
+	"psi" = log_posterior_zippsi
+)	
+```
+Each study will have it's own likelihoood and priors, so you'll need to custom-write these functions anew each time. This may seem cumbersome, but it is *flexible*.
+
+Each log-posterior density function must have the same arguments:
+- `x_target`: the candidate value of the variable for that posterior function
+- `x_all`: a named numeric variable with _all_ variables in a vector, needed to compute the likelihood.
+- `data_likelihood`: a named-list with all the data necessary to compute the likellihood (like the  JAGS argument `data`)
+- `prior parmaeters`: a named-list with the prior-parameters for each variable to sample
+
+
+The log-posterior functions are collected in a named-list `list_of_log_posteriors`, with an entry for each variable to sample (lambda and psi). The list is passed as an argument `slice.sample` function. 
+
+Read below for more about the other arguments of `slice.sample`. Or, have a look at the following demo files.
 
 
 
