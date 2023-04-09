@@ -3,6 +3,7 @@
 # In particular, how to specify the log-densities (log-ikelihood + log-prior)
 # To induce 'sparsity' we'll use a student-T prior
 # We'll compare it to a Ridge Regression (l2-regularization) and the Lasso (l1-regularization)
+# CONCLUSION: we'll show that the Student-T priors induce a type of l1-regularization (i.e., shrinkage of some parameters towards 0, which is a type of model selection)
 
 # import Slice Sampler
 source("../src/flexible_slice_sampler.R")
@@ -192,6 +193,9 @@ beta_hats_bayesian <- apply(
           'ucl95'=quantile(x, 0.025,names=FALSE))
     })
 
+
+par(mfrow=c(2,2))
+
 # PLOT: compare Ridge Regression to Bayesian Student-T priors
 beta_names <- paste0('V',1:20)
 plot(x=coef(ridge)[beta_names,], y=beta_hats_bayesian['mean',beta_names],
@@ -209,10 +213,18 @@ abline(0,1)
 
 # PLOT: compare to MLEs Bayesian Student-T priors
 plot(x=coef(maxlike_model)[beta_names], y=beta_hats_bayesian['mean',beta_names],
-     main='Student-T priors vs Ridge Regression',
+     main='Student-T priors vs MLEs',
      xlab='MLE', ylab='Bayesian Estimates'
 )
 abline(0,1)
+
+# PLOT : MLEs vs Lasso
+plot(x=coef(maxlike_model)[beta_names], y=coef(lasso)[beta_names,],
+     main='LASSO vs MLEs',
+     xlab='MLE', ylab='Lasso estimates'
+)
+abline(0,1)
+
 
 
 ## CONCLUSION: 
