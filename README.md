@@ -1,8 +1,13 @@
 # Flexible-R-SliceSampler
 
-Just another Slice Sampler for Bayesian Sampling -- but highly efficient and flexible in pure R (no more JAGS/BUGS/STAN). 
+Just another Slice Sampler for Bayesian Sampling -- but highly efficient and flexible in pure R (i.e., no more weird JAGS/BUGS/STAN synatx ). 
 
-Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") when JAGS/BUGs exists? We used in Rankin et al 2020 for a complex Bayesian analysis of Dugongs that wouldn't work in JAGS. 
+Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") when JAGS/BUGs exists? We used in Rankin et al 2020 for a complex Bayesian analysis of Dugongs which could be run in JAGS... here was missing data, complex mixture priors, and a hierarchical process that required a custom Gibbs sampler. 
+
+The Slice Sampler (based on Neal 2003) worked so well, I decided to open-source it for others
+
+Be sure to check out our examples in `demos/`. And be sure to read above the key-parameters below.
+
 
 ## Motivation: Why use Flexible-R-SliceSampler (vs. JAGS or BUGS)
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
@@ -66,7 +71,7 @@ We will now re-write the above JAGS ZIPpoisson model as log-posterior **R-functi
 
 In particular, for each variable (`lambda` and `psi`), we must write a log-posterior function that computes the likelihood and the prior (logged). The posteriors can be **unnormalized**, making it relatively simple to compute (basically, we just the sum of the log-likelihood and log-priors).
 
-Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc:
+Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc.:
 
 ```R
 # log posterior with log-normal density on lambda
@@ -127,7 +132,7 @@ Each log-posterior density function must have the same arguments:
 - `x_target`: the candidate value of the variable for that posterior function
 - `x_all`: a named numeric variable with _all_ variables in a vector, needed to compute the likelihood.
 - `data_likelihood`: a named-list with all the data necessary to compute the likellihood (like the  JAGS argument `data`)
-- `prior parmaeters`: a named-list with the prior-parameters for each variable to sample
+- `prior parameters`: a named-list with the prior-parameters for each variable to sample
 
 
 The log-posterior functions are collected in a named-list `list_of_log_posteriors`, with an entry for each variable to sample (lambda and psi). The list is passed as an argument `slice.sample` function. 
@@ -143,10 +148,38 @@ Read below for more about the other arguments of `slice.sample`. Or, have a look
 - `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
 
 
+## Slice Sampling Overview.
+
+Neal (2003) describes a rejection-free method of MCMC sampling for complex multivariate joint-posteriors. _Slice-Sampling also has relatively few "tunable" hyperparameters, unlike some Metropolis-Hastings-like methods that fail to converge if the hyperparameters are poorly set.
+
+**The most important hyperparameter is the STEP-SIZE parametre `W`** -- it is used to laterally "step" arond the univariate-parameter interval of `x` to find good regions of the posterior-density to sample `x`. You'll need to read Neal 2003 to get a better understanding.
+
+In Flexible-R-SliceSampler, we have a good method of automatically adjusting the step-size `W` parameters. However, **the `W` parameters must be carefully watched to ensure they converge on acceptable values, and the sampler doesn't hang, choke, or mix badly. 
+
+Usually, if the `W` step-sizes don't converge, there is something _else_ wrong with the model.
+
+### Slice Sampling in Brief
+
+Given a point $x$ and posterior-density function $f(x)$, we:
+- sample $z$ uniformly along vertical from 0 to f(x): $z\sim\text{Unif}(0,f(x))$
+- find the left-most point (L) at which f(L) == z
+- find the right-most point (R) at which f(R) == z
+- sample a new x-star from Unif(L,R). 
+- If f(x-star) > 
+
+
+
+
 ## Citation
 
 If you use this slice-sampler, please cite the following study:
 
 ```
 Rankin RW, Marsh H. 2020. Technical Appendices: 8-11 in Marsh H, Collins K. Grech A., Miller R and Rankin RW. 2020. *An assessment of the distribution and abundance of dugongs and in-water, large marine turtles along the Queensland coast from Cape York to Hinchinbrook Island.* A report to the Great Barrier Reef Marine Park Authority, April 2020.
+```
+
+The original Slice Samplier paper by Neal 2003 should be cited as: 
+
+```
+Neal, R. M. 2003. Slice sampling. The Annals of Statistics 31:705–767.
 ```
