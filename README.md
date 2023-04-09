@@ -6,6 +6,7 @@ Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") w
 
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - **No 'rejection' sampling** - don't waste compute-resources throwing out samples a la Metropolis-Hasting.
+- **Matrix Operations** - these are cumbersome in JAGS but can be easy and optimized in R  
 - **Novel Distributions** - if you need a distribution that is not supported in JAGS/BUGS/STAN  
     - whatever probability distribution you code in R, you can use in this Slice Sampler
 - **Intractible Priors** - you have an intractible Prior distribution (and likewise intractible posterior) that can't be normalized  
