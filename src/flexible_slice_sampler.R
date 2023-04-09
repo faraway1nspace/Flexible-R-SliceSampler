@@ -1,5 +1,5 @@
 
-
+# default functions
 slice.sample.verbose <- function(x.init, # initial estimates of variables
                                  list_of_log_densities, #log.densities.list,
                                  data_likelihood, # y data and model-matrices
@@ -29,7 +29,7 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
     # store the samples
     samples_mcmc <- matrix(0,nslice,npar)
 
-    # initialize `x` with initial values of x.init
+    # initialize `x` with initial values of `x.init`
     x <-x.init # x is our current estimate of the variables
 
     # monitor the slice size: this is import to tune/auto-adjust the values of `w`
@@ -102,6 +102,8 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
                 data_likelihood,
                 prior_parameters[[p]]
             )
+
+            # while loop to adjust R[p] by W[p]
             while(
                 (random_slice_height < f_at_R) & (K>0) & (R[p]<x.uppb[p])
             ){
@@ -116,9 +118,8 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
             } # end when f_at_R < slice_height or K==0
 
             # Step 3: sample between L and R
-            xstar <- x # new sample of x
-
-            # sample xstart between L[p] and R[]
+            xstar <- x 
+            # insert new sample at p: sample xstar[p] from Uniform(L[p], R[p])
             xstar[p] <- runif(1,L[p],R[p])
 
             # log-denisty at the new x-star
@@ -202,3 +203,8 @@ logdensity_univariatemean_norm <- function(
     )
     return (loglike + logdensity_prior)}
 
+
+# student t distribution
+log_studentt<- function(x, df=1, mu=0, sigma=1){
+    return( log(1)-log(sigma) + dt((x - mu)/sigma, df, log=TRUE) )
+}
