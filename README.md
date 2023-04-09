@@ -176,9 +176,13 @@ Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point
 
 **The critical point is that the hyperparameter $W$ must be carefully set**. This is the key thing the user must initially set.
 
-```note
+
+---
+**NOTE**
+
 We have found that the best step-size W is the long-run average of R-L over the entire density. Therefore, we can monitor R and L, and slowly adjust W to the long-run average of R-L
-```
+---
+
 
 
 
