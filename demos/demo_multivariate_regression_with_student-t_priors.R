@@ -31,15 +31,16 @@ lasso = glmnet(x, y, alpha=1, lambda=0.1) # lasso regression
 ############################################################
 ### Set-Up Slice Sampler
 
-#### DATA 
+
+#### DATA
+data_likelihood <- list()
 
 # data for likelihood (response variable and X-matrix aka model-matrix)
-X_model_matrix = model.matrix(y~., data=X_df)
+X_model_matrix = model.matrix(y~., data=X_df)  # model matrix, aka X-data
 
-data_likelihood <- list(
-    y = y, # y data
-    mm = X_model_matrix # X-data, aka model-matrix
-)
+data_likelihood[['y']] <- y # response variable
+data_likelihood[['mm']] <- X_model_matrix # X-data, aka model-matrix
+
 
 #### PRIORS
 prior_parameters_list <- list()
@@ -199,21 +200,21 @@ par(mfrow=c(2,2))
 # PLOT: compare Ridge Regression to Bayesian Student-T priors
 beta_names <- paste0('V',1:20)
 plot(x=coef(ridge)[beta_names,], y=beta_hats_bayesian['mean',beta_names],
-     main='Student-T priors vs Ridge Regression',
+     main='Bayesian (Student-T priors) vs Ridge Regression',
      xlab='Ridge estimates', ylab='Bayesian Estimates'
 )
 abline(0,1)
 
 # PLOT: compare Lasso Regression to Bayesian Student-T priors
 plot(x=coef(lasso)[beta_names,], y=beta_hats_bayesian['mean',beta_names],
-     main='Student-T priors vs Lasso Regression',
+     main='Bayesian (Student-T priors) vs Lasso Regression',
      xlab='Lasso estimates', ylab='Bayesian Estimates'
 )
 abline(0,1)
 
 # PLOT: compare to MLEs Bayesian Student-T priors
 plot(x=coef(maxlike_model)[beta_names], y=beta_hats_bayesian['mean',beta_names],
-     main='Student-T priors vs MLEs',
+     main='Bayesian (Student-T priors) vs MLEs',
      xlab='MLE', ylab='Bayesian Estimates'
 )
 abline(0,1)
@@ -224,6 +225,5 @@ plot(x=coef(maxlike_model)[beta_names], y=coef(lasso)[beta_names,],
      xlab='MLE', ylab='Lasso estimates'
 )
 abline(0,1)
-
 
 ## CONCLUSION: notice that the Lasso and the Student-T Bayesian estimates compared to the MLEs, in particular, see that MLE values that near zero are "shrunk" to almost exactly 0. This is a type of "automatic variable selection". In the Lasso, it is induced by a penalty on the L1-norm of the parameter values. Wheras in the Bayesian Estimation, it is induced by a 'Spike and slab'-like prior.  RECALL that a Student-T distribution with df=2 is spiked at 0, but with long tails in higher-values. This pushes unimportant variables towards zero, and important variables are free to take on high values.
