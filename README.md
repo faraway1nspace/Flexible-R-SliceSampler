@@ -170,6 +170,15 @@ Given a point $x$ and posterior-density function $f(x)$, we:
     - If $x_{\text{new}} < x$, then $L \leftarrow x_{\text{new}}$ 
 	- Elif $x_{\text{new}} > x$, then $R \leftarrow x_{\text{new}}$ 
     - Repeat steps 4 to 6 until $f(x_{\text{new}}) > z$
+	
+	
+Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point ($L$) and right-most point $L$ where $f=z$. This is the key step called by Neal the "stepping-out procedure. Basically, we move $x$ outward by a step-size $W$ until $f(x-m*W) < z$. The following picture from Wikipedia does a great job describing the stepping-out procedure, and the "shrinkage" procedure of step 6.
+
+**The critical point is that the hyperparameter $W$ must be carefully set**. This is the key thing the user must initially set.
+
+```note
+We have found that the best step-size W is the long-run average of R-L over the entire density. Therefore, we can monitor R and L, and slowly adjust W to the long-run average of R-L
+```
 
 
 
