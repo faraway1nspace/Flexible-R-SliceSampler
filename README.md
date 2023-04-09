@@ -4,6 +4,7 @@ Just another Slice Sampler for Bayesian Sampling -- but highly efficient and fle
 
 Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") when JAGS/BUGs exists? We used in Rankin et al 2020 for a complex Bayesian analysis of Dugongs that wouldn't work in JAGS. 
 
+## Motivation: Why use Flexible-R-SliceSampler (vs. JAGS or BUGS)
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - **No 'rejection' sampling** - don't waste compute-resources throwing out samples a la Metropolis-Hasting.
 - **Matrix Operations** - these are cumbersome in JAGS but can be easy and optimized in R  
@@ -21,6 +22,10 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - **Interweave Complex Processes** -you want to interweave complex R-processes in between vanilla MCMC  
     - e.g. let's say a part of your Gibbs-sampling depends on a Hidden-Markov-Model process that is unavailable in JAGS/BUGS, like sampling of HMM-states. You can sample from these states outside of the slice sampler using conventional HMM R-code, then run the Slice Sampler conditional on those states as "data", and repeat.
 - **BUGS/JAGS is annoying** - why code in BUGS/JAGS if you can do it better & faster in R?
+
+### Why you Shouldn't use Flexible-R-SliceSampler (vs. JAGS or BUGS)
+- You don't understand likelihoods and can't compute them yourself
+- You have a simple model that is easily run in JAGS 
 
 ## Syntax Comparison to JAGS
 
