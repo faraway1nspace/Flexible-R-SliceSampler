@@ -195,6 +195,7 @@ beta_hats_bayesian <- apply(
     })
 
 
+# COMPARE bayesian estimates to the Lasso, Ridge, and MLEs
 par(mfrow=c(2,2))
 
 # PLOT: compare Ridge Regression to Bayesian Student-T priors

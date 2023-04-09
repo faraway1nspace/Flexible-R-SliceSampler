@@ -8,9 +8,11 @@ slice.sample <- function(x.init, # initial estimates of variables
                          x.lowb=rep(-10^6, length(x.init)),
                          x.uppb=rep(10^6, length(x.init)),
                          w=rep(3.0,length(x.init)),
-                         m=10,
+                         m=10, # steps to shift W
                          pass.counter=1000,
-                         print_interval=100
+                         w_auto_adjust=TRUE, # whether to auto-adjust w
+                         w_auto_adjust_factor=0.8, # auto-adjustment factor
+                         print_interval=100  # print interval                       
                          ){
     #' Gibbs Slice sampler, native to R
     #' x.init: numeric vector of initial estimates
@@ -21,9 +23,12 @@ slice.sample <- function(x.init, # initial estimates of variables
     #' x.lowb: numeric float, lower-bounds of x.init
     #' x.uppb: numeric float, upper-nounds of x.init
     #' w: window parameters: the most important hyperparameter to guide behaviour: see Details
-    #' m: ?
+    #' m: see Slice Sampling Paper
     #' pass.counter: last-ditch rejection sampling if things go badly
-
+    #' print_interval: how often to print w-slices estimates
+    #' w_auto_adjust: bool, whether to auto-adjust the w-slice intervals
+    #' w_auto_adjust_factor: float, smoothing-factor to mix new w estimates with past estimates
+    
     # number of parameters to sample
     npar <- length(x.init)
 
@@ -175,10 +180,17 @@ slice.sample <- function(x.init, # initial estimates of variables
         # accept x into our storage container
         samples_mcmc[i,] <- x
 
-        # monitor the w
+        # update values of W
+        if(w_auto_adjust){
+            # moving average that stabilizes with increasing i
+            q<-w_auto_adjust_factor
+            w <- q^(8.0/i)*w + (1-q^(8.0/i))*w_monitor_slice_size
+        }
+        
+        # print monitor the w
         if (i%%print_interval==0){
             # here, we print the W-slice widths. These should stabilize
-            print(sprintf("Iter:%d/%d; W=%s", i,nslice, paste(round(w_monitor_slice_size,3),collapse=',')))
+            print(sprintf("Iter:%d/%d; W=%s", i,nslice, paste(round(w,3),collapse=',')))
         }
     }
     return(
