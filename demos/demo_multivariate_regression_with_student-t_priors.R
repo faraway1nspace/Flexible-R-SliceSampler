@@ -3,7 +3,7 @@
 # In particular, how to specify the log-densities (log-ikelihood + log-prior)
 # To induce 'sparsity' we'll use a student-T prior
 # We'll compare it to a Ridge Regression (l2-regularization) and the Lasso (l1-regularization)
-# CONCLUSION: we'll show that the Student-T priors induce a type of l1-regularization (i.e., shrinkage of some parameters towards 0, which is a type of model selection)
+# CONCLUSION: we'll show that the Student-T priors induce a type of l1-regularization (i.e., shrinkage of some parameters towards 0, which is a type of model selection). In the Lasso, it is induced by a penalty on the L1-norm of the parameter values. Wheras in the Bayesian Estimation, it is induced by a 'Spike and slab'-like prior -- a Student-T that is spiked at 0, but with long tails in higher-values. This pushes unimportant variables towards zero, and important variables are free to take on high values.
 
 # import Slice Sampler
 source("../src/flexible_slice_sampler.R")
@@ -226,5 +226,4 @@ plot(x=coef(maxlike_model)[beta_names], y=coef(lasso)[beta_names,],
 abline(0,1)
 
 
-
-## CONCLUSION: 
+## CONCLUSION: notice that the Lasso and the Student-T Bayesian estimates compared to the MLEs, in particular, see that MLE values that near zero are "shrunk" to almost exactly 0. This is a type of "automatic variable selection". In the Lasso, it is induced by a penalty on the L1-norm of the parameter values. Wheras in the Bayesian Estimation, it is induced by a 'Spike and slab'-like prior.  RECALL that a Student-T distribution with df=2 is spiked at 0, but with long tails in higher-values. This pushes unimportant variables towards zero, and important variables are free to take on high values.
