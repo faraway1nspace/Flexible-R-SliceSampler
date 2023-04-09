@@ -161,12 +161,15 @@ Usually, if the `W` step-sizes don't converge, there is something _else_ wrong w
 ### Slice Sampling in Brief
 
 Given a point $x$ and posterior-density function $f(x)$, we:
-- sample $z$ uniformly along vertical from 0 to f(x): $z\sim\text{Unif}(0,f(x))$
-- find the left-most point ($L$) at which $f(L) = z$
-- find the right-most point ($R$) at which $f(R) == z$
-- sample a new $x_{new}$ uniformly between $L$ and $R$ : $x_{new}\sim\mathcal{U}(L,R)$
-- If f(x-star) > 
-
+1. sample $z$ uniformly along vertical from 0 to f(x): $z\sim\mathcal{U}(0,f(x))$
+2. find the left-most point ($L$) at which $f(L) = z$
+3. find the right-most point ($R$) at which $f(R) == z$
+4. sample a new $x_{\text{new}}$ uniformly between $L$ and $R$ : $x_{\text{new}}\sim\mathcal{U}(L,R)$
+5. If $f(x_{\text{new}}) > z$ then accept $x = x_{\text{new}}$, and move-on to next variable
+6. If not then "shrink" the boundaries L and R:  
+    - If $x_{\text{new}} < x$, then $L \leftarrow x_{\text{new}}$ 
+	- Elif $x_{\text{new}} > x$, then $R \leftarrow x_{\text{new}}$ 
+    - Repeat steps 4 to 6 until $f(x_{\text{new}}) > z$
 
 
 
