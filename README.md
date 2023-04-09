@@ -29,12 +29,45 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 
 ## Syntax Comparison to JAGS
 
-TODO 
+Let's run a Zero-Inflated poisson model, with poisson variable `lambda` and zero-inflation variable `psi`. Let's say the data is simply: `y <- c(1,0,0,0,10,0,3,0,0,0,0,0,0,30)`. In JAGS, the model syntax would be:
+
+```R
+jags_model_syntax <- "model{
+   # prior on psi
+   psi ~ dbeta(prior_psi_a,prior_psi_b)
+   
+   # prior on (log)lambda
+   tau <- 1/(prior_lambda_sigma * prior_lambda_sigma)
+   loglambda ~ dnorm(prior_lambda_mean, tau)
+   lambda <- exp(loglambda)
+
+   # likelihood
+   for(i in 1:N){
+      
+      # zero-inflation process:
+      zip[i] ~ dbern(psi)
+      
+      # toggle-able lambda based on zero-inflation
+      lambda1[i] <- lambda*zip[i] + 0.000001 
+      # .. NOTICE THE CONSTANT 0.000001 that is necessary to stabilize the ZIPpoisson!
+      
+      # poisson likelkhood
+      y[i] ~ dpois(lambda1[i])
+   }
+}
+"
+```
+
+Flexible-R-SliceSampler, 
+
+
+
 
 ## Files
 
 - `src/flexible_slice_sampler.R` - source code with flexible slice sampler
 - `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
+- `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
 
 
 ## Citation
