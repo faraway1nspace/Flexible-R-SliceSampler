@@ -174,9 +174,11 @@ Given a point $x$ and posterior-density function $f(x)$, we:
 	
 Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point ($L$) and right-most point $L$ where $f=z$. This is the key step called by Neal the "stepping-out procedure. Basically, we move $x$ outward by a step-size $W$ until $f(x-m*W) < z$. The following picture from Wikipedia does a great job describing the stepping-out procedure, and the "shrinkage" procedure of step 6.
 
+![slice-sampling-overview](./img/750px-Summary_of_slice_sampling.png)
+
 **The critical point: the user must supply a reasonable value for the $W$**. It should be approximately the size of, say, the inner 68% of the posterior-density. I.e., if the 95%CI of the posterior-density is from -2 to 2, then a good value of W would be 2. `slice.sample` has an automatic way to adjust W once the sampling gets going.
 
-![slice-sampling-overview](./img/750px-Summary_of_slice_sampling.png)
+
 
 
 | :memo:        | We have found that the best step-size (`W`) is the long-run average of `R-L` over the entire density. Therefore, during sampling, we can monitor R and L, and slowly adjust W to the long-run average of R-L |
