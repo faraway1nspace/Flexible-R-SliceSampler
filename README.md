@@ -178,15 +178,34 @@ Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point
 
 **The critical point: the user must supply a reasonable value for the $W$**. It should be approximately the size of, say, the inner 68% of the posterior-density. I.e., if the 95%CI of the posterior-density is from -2 to 2, then a good value of W would be 2. `slice.sample` has an automatic way to adjust W once the sampling gets going.
 
-
-
-
 | :memo:        | We have found that the best step-size (`W`) is the long-run average of `R-L` over the entire density. Therefore, during sampling, we can monitor R and L, and slowly adjust W to the long-run average of R-L |
 |---------------|:------------------------|
 
 ### Key Arguments for `slice.sample`.
 
 
+- `x.init` - initial estimates of all variables
+- `list_of_log_posteriors` - named-list with the log-posterior density function, for each variable to sample.
+- `data_likelihood` - a list with the data for likelihood; this data will be based to each function in list_of_log_posteriors.
+- `prior_parameters_list` - a named-list with prior-parameters, for each variable to sample
+- `nslice` - number of MCMC iterations (no thinning)
+- `x.lowb` - numeric vector of lower-bound values for `x.init`
+- `x.uppb` - numeric vector of upper-bound values for `x.init`
+- `w` - numeric vector for step-size intervals for each x to sample (**key parameter to set**)
+- `m` - max number of steps to shift left or right
+- `w_auto_adjust=TRUE` - whether to auto-adjust `w`, if FALSE, then `w` is fixed
+- `w_auto_adjust_factor=0.8` - a decay factor to slowly harden the auto-adjusted estimates of `w`
+
+You'll need to custom-code the `list_of_log_posteriors`, and the `data_likelihood` and priors, obviously. 
+
+
+## Another Example: Interweaving Slice-Sampling with Other Steps
+
+The thing I love about `slice.sample` (and why we used it in Rankin & Marsh (2020)) is because, unlike JAGS/BUGs, we can interweave slice-sampling with other MCMC steps. 
+
+For example, maybe for each k-slice-sampling steps, we want to impute new missing data. Or, we want to subsample.
+
+TODO - example of interweaving slice sampling and other 
 
 
 
