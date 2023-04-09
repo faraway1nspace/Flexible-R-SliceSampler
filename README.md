@@ -64,9 +64,9 @@ jags_model_syntax <- "model{
 
 We will now re-write the above JAGS ZIPpoisson model as log-posterior **R-functions**. 
 
-In particular, for each variable each variable (`lambda` and `psi`), we must write a log-posterior densities function. The posteriors can be **unnormalized**, making it relatively simple to compute.(basically just the sum of the log-likelihood and log-priors).
+In particular, for each variable (`lambda` and `psi`), we must write a log-posterior function that computes the likelihood and the prior (logged). The posteriors can be **unnormalized**, making it relatively simple to compute (basically, we just the sum of the log-likelihood and log-priors).
 
-Here are the log-posterior functions for `lambda` and `psi`:
+Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc:
 
 ```R
 # log posterior with log-normal density on lambda
