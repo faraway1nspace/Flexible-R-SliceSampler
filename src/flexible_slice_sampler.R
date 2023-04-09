@@ -9,7 +9,8 @@ slice.sample <- function(x.init, # initial estimates of variables
                          x.uppb=rep(10^6, length(x.init)),
                          w=rep(3.0,length(x.init)),
                          m=10,
-                         pass.counter=1000
+                         pass.counter=1000,
+                         print_interval=100
                          ){
     #' Gibbs Slice sampler, native to R
     #' x.init: numeric vector of initial estimates
@@ -28,6 +29,7 @@ slice.sample <- function(x.init, # initial estimates of variables
 
     # store the samples
     samples_mcmc <- matrix(0,nslice,npar)
+    colnames(samples_mcmc) <- names(list_of_log_posteriors)
 
     # initialize `x` with initial values of `x.init`
     x <-x.init # x is our current estimate of the variables
@@ -172,11 +174,17 @@ slice.sample <- function(x.init, # initial estimates of variables
 
         # accept x into our storage container
         samples_mcmc[i,] <- x
+
+        # monitor the w
+        if (i%%print_interval==0){
+            # here, we print the W-slice widths. These should stabilize
+            print(sprintf("Iter:%d/%d; W=%s", i,nslice, paste(round(w_monitor_slice_size,3),collapse=',')))
+        }
     }
     return(
         list(
             samples=samples_mcmc,
-            m=w_monitor_slice_size
+            w=w_monitor_slice_size
         ))
 }
 

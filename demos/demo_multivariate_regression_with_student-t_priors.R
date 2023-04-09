@@ -2,7 +2,7 @@
 #
 # In particular, how to specify the log-densities (log-ikelihood + log-prior)
 # To induce 'sparsity' we'll use a student-T prior
-# We'll compare it to a Ridge Regression
+# We'll compare it to a Ridge Regression (l2-regularization) and the Lasso (l1-regularization)
 
 # import Slice Sampler
 source("../src/flexible_slice_sampler.R")
@@ -19,8 +19,13 @@ X_df = data=cbind(y=y,as.data.frame(x)) # X as data.frame
 
 # least squares (for comparison to Bayesian)
 maxlike_model = glm(y~., data=X_df)
-# fit a ridge regression (for comparison to Bayesin)
-ridge = glmnet(x, y, alpha=0, lambda=5) # ridge regression
+# fit a ridge regression l2-regularization (for comparison to Bayesin)
+ridge = glmnet(x, y, alpha=0, lambda=2) # ridge regression
+# fit a lasso regression l1-regularization (for comparison to Bayesin)
+lasso = glmnet(x, y, alpha=1, lambda=0.1) # lasso regression
+
+# in this demo, we'll see how Student-T priors induce a variable-slection like the Lasso
+
 
 ############################################################
 ### Set-Up Slice Sampler
@@ -173,6 +178,41 @@ samples_mcmc <- slice.sample(
 # inspect the MCMC time-series (no-rejection-sampling necessary)
 plot(mcmc(samples_mcmc$samples))
 
+# inspect the W parameters
+# 
 
-# get summary statistics
-coefs_bayesian <- 
+# get estimates of the posteriors
+beta_hats_bayesian <- apply(
+    samples_mcmc$samples,2,function(x){
+        c(
+            'mean'=mean(x),
+          'median'=median(x),
+          'se'=sd(x),
+          'lcl95'=quantile(x, 0.025,names=FALSE),
+          'ucl95'=quantile(x, 0.025,names=FALSE))
+    })
+
+# PLOT: compare Ridge Regression to Bayesian Student-T priors
+beta_names <- paste0('V',1:20)
+plot(x=coef(ridge)[beta_names,], y=beta_hats_bayesian['mean',beta_names],
+     main='Student-T priors vs Ridge Regression',
+     xlab='Ridge estimates', ylab='Bayesian Estimates'
+)
+abline(0,1)
+
+# PLOT: compare Lasso Regression to Bayesian Student-T priors
+plot(x=coef(lasso)[beta_names,], y=beta_hats_bayesian['mean',beta_names],
+     main='Student-T priors vs Lasso Regression',
+     xlab='Lasso estimates', ylab='Bayesian Estimates'
+)
+abline(0,1)
+
+# PLOT: compare to MLEs Bayesian Student-T priors
+plot(x=coef(maxlike_model)[beta_names], y=beta_hats_bayesian['mean',beta_names],
+     main='Student-T priors vs Ridge Regression',
+     xlab='MLE', ylab='Bayesian Estimates'
+)
+abline(0,1)
+
+
+## CONCLUSION: 
