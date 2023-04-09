@@ -62,7 +62,7 @@ jags_model_syntax <- "model{
 
 ### Syntax in Flexible-R-SliceSampler
 
-We will not write **R-functions** to represent the above JAGS ZIPpoisson process.
+We will now re-write the above JAGS ZIPpoisson model as log-posterior **R-functions**. 
 
 In particular, for each variable each variable (`lambda` and `psi`), we must write a log-posterior densities function. The posteriors can be **unnormalized**, making it relatively simple to compute.(basically just the sum of the log-likelihood and log-priors).
 
