@@ -58,7 +58,61 @@ jags_model_syntax <- "model{
 "
 ```
 
-Flexible-R-SliceSampler, 
+In the Flexible-R-SliceSampler, we must specify R **functions** for the log-posterior densities for each variable (`lambda` and `psi`).  The posteriors can be **unnormalized**, meaning it is a simple sum of the log-likelihood and log-priors.
+
+The log-posterior R functions are passed to the `slice.sample` function as a named list called `list_of_log_posteriors = list("lambda" =..., "psi"=...)`. Each log-posterior density function must have the same arguments:
+- `x_target`: accepts a candidate value of the variable for that posterior function
+- `x_all`: a named numeric variable with _all_ variables in a vector, to compute the likelihood.
+- `data_likelihood`: a named list with all the data necessary to compute the likellihood (like JAGS, data argument)
+- `prior parmaeters`: a named list, per variable, with its prior-parameters
+
+
+```R
+# log posterior with log-normal density on lambda
+log_posterior_ziplambda <- function(x_target,
+                                    x_all,
+                                    data_likelihood,
+                                    prior_parameters
+                                    ){
+    # data for likelihood: y values
+    y <- data_likelihood$y
+
+    # (naive) loglikelihood for zip poisson (works, but primariy for readability
+    likelihoods_poisson_unconditional <- dpois(y,lambda=x_all['lambda'],log=FALSE)
+    likelihoods_zip <- (1-x_all['psi'])*(y==0) + x_all['psi']*likelihoods_poisson_unconditional
+    loglike <- sum(log(likelihoods_zip))
+
+    # normal prior on log-lambda
+    log_prior <- dnorm(
+        log(x_target),
+        mean=prior_parameters[['prior_lambda_mean']],
+        sd=prior_parameters[['prior_lambda_sigma']], # note the sqrt(1/tau) for JAGS-compatibility,
+        log=TRUE
+    )
+    return(loglike + log_prior)}
+	
+# log-posterior with Beta prior on psi
+log_posterior_zippsi <- function(x_target,
+                                 x_all,
+                                 data_likelihood,
+                                 prior_parameters
+                                 ){
+    # data for likelihood: y values
+    y <- data_likelihood$y
+
+    # (naive) loglikelihood
+    likelihoods_poisson_unconditional <- dpois(y,lambda=x_all['lambda'],log=FALSE)
+    likelihoods_zip <- (1-x_all['psi'])*(y==0) + x_all['psi']*likelihoods_poisson_unconditional
+    loglike <- sum(log(likelihoods_zip))
+    # logprior density on psi with Beta prior
+    log_prior <- dbeta(
+        x_target,
+        shape1=prior_parameters[['prior_psi_a']],
+        shape2=prior_parameters[['prior_psi_b']],        
+        log=TRUE
+    )
+    return(loglike + log_prior)}
+```
 
 
 
