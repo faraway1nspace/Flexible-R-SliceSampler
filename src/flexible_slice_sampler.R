@@ -1,21 +1,21 @@
 
 # default functions
-slice.sample.verbose <- function(x.init, # initial estimates of variables
-                                 list_of_log_densities, #log.densities.list,
-                                 data_likelihood, # y data and model-matrices
-                                 prior_parameters, # hyperparameters for 
-                                 nslice=2000,
-                                 x.lowb=rep(-10^6, length(x.init)),
-                                 x.uppb=rep(10^6, length(x.init)),
-                                 w=rep(3.0,length(x.init)),
-                                 m=10,
-                                 pass.counter=1000
-                                 ){
+slice.sample <- function(x.init, # initial estimates of variables
+                         list_of_log_posteriors, #log.densities.list, per variable in x
+                         data_likelihood, # y data and model-matrices
+                         prior_parameters_list, # hyperparameters for priors, per variable in x
+                         nslice=2000,
+                         x.lowb=rep(-10^6, length(x.init)),
+                         x.uppb=rep(10^6, length(x.init)),
+                         w=rep(3.0,length(x.init)),
+                         m=10,
+                         pass.counter=1000
+                         ){
     #' Gibbs Slice sampler, native to R
     #' x.init: numeric vector of initial estimates
     #' data: y-data and model-matrix for ingestion by likelihood function
-    #' list_of_log_densities: a list of (log) density functions for each parameter in x, typically the log-prior + log-likelihood. See details
-    #' prior_parameters: list of hyperparameters 
+    #' list_of_log_posteriors: a list of (log) density functions for each parameter in x, typically the log-prior + log-likelihood. See details
+    #' prior_parameters_list: list of hyperparameters 
     #' nlice: int, number of slices to sample / number of iterations
     #' x.lowb: numeric float, lower-bounds of x.init
     #' x.uppb: numeric float, upper-nounds of x.init
@@ -42,14 +42,14 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
         for(p in 1:npar){ # 
 
             # target density for this parameter p
-            log_density_for_p = list_of_log_densities[[p]]
+            log_density_for_p = list_of_log_posteriors[[p]]
             
             # get (posterio) density at x=x
             log_f_at_x <- log_density_for_p(
-                x.focus=x[p],                
+                x_target=x[[p]],                
                 x_all=x,
                 data_likelihood,
-                prior_parameters[[p]]
+                prior_parameters_list[[p]]
             )
             
             # sample random slice height < f(x) y.r
@@ -66,14 +66,14 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
             L[p] <- pmax( x[p]-w[p]*uv[1], x.lowb[p]);
             # log-density at L[p]
             f_at_L <- log_density_for_p(
-                x_target=L[p],                
+                x_target=L[[p]],
                 x_all=L,
                 data_likelihood,
-                prior_parameters[[p]]
+                prior_parameters_list[[p]]
             )
 
             # move p's R to the right by the window size w[p]
-            R[p] <- pmin(L[p]+w[p], x.uppb[p])
+            R[p] <- pmin(L[[p]]+w[[p]], x.uppb[[p]])
             J <- floor(m*uv[2]) # J steps to move L
             K <- (m-1)-J # K steps to move R
 
@@ -91,16 +91,16 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
                     x_target=L[p],
                     x=L,
                     data_likelihood,
-                    prior_parameters[[p]]
+                    prior_parameters_list[[p]]
                 )
             } # end when f_at_L < slice_height or J==0
 
             # step 2: incrementally move R[p] outside of density until f_at_R < slice_height
             f_at_R <- log_density_for_p(
-                x_target=R[p],                
+                x_target=R[[p]],
                 x_all=R,
                 data_likelihood,
-                prior_parameters[[p]]
+                prior_parameters_list[[p]]
             )
 
             # while loop to adjust R[p] by W[p]
@@ -113,7 +113,7 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
                 K <- K-1
                 # new log-density at R
                 f_at_R<- log_density_for_p(
-                    x=R, x_target=R[p], data_likelihood, prior_parameters[[p]]
+                    x=R, x_target=R[p], data_likelihood, prior_parameters_list[[p]]
                 )
             } # end when f_at_R < slice_height or K==0
 
@@ -124,10 +124,10 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
 
             # log-denisty at the new x-star
             f_at_xstar <- log_density_for_p(
-                x_target=xstar[p],
+                x_target=xstar[[p]],
                 x_all=xstar,
                 data_likelihood,
-                prior_parameters[[p]]
+                prior_parameters_list[[p]]
             )
             # we accept x if log_density_at_x is > random_slice_height            
             accept_f_at_xstar <- (f_at_xstar >= random_slice_height)
@@ -151,11 +151,12 @@ slice.sample.verbose <- function(x.init, # initial estimates of variables
                     x_target=xstar[p],
                     x_all=xstar,
                     data_likelihood,
-                    prior_parameters[[p]]
+                    prior_parameters_list[[p]]
                 )
                 # we accept x if log_density_at_x is > random_slice_height            
                 accept_f_at_xstar <- (f_at_xstar >= random_slice_height)
                 # decrement pass.counter.i
+                pass <- accept_f_at_xstar & pass.counter.i>0
                 pass.counter.i <- pass.counter.i-1
                 if(pass.counter.i<0){stop(sprintf('failed to get xstar; something wrong with %d',p))}
             } # done
