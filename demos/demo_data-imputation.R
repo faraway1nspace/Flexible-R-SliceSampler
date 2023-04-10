@@ -18,7 +18,7 @@
 set.seed(42)
 
 source("../src/flexible_slice_sampler.R")
-
+source("../src/example_log-posteriors.R"
 
 ###############
 # SET-UP X-DATA
@@ -73,7 +73,7 @@ rpois_truncated <- function(lambda, min, max){
     x_density <- dpois(x, lambda=lambda)
     return(sample(x, size=1, prob = x_density/sum(x_density)))}
 
-# 
+# mixture imputation
 impute <- function(min, best, max, p=0.5){
     # complex imputation function: mixture of 'best' and a rpois(truncated)
     best_or_rpois <- runif(1) # toggle between
@@ -83,9 +83,49 @@ impute <- function(min, best, max, p=0.5){
     return( rpois_truncated(lambda=best, min=min, max=max) )}
 
 
+y_imputed <- y_minbestmax
+for(idx in idx_missing){
+    y_imputed[idx,'count'] <- impute(
+        min=y_minbestmax[idx,'min'],
+        best=y_minbestmax[idx,'best'],
+        max=y_minbestmax[idx, 'max'],
+        0.3
+    )
+}
+print(y_imputed)
 
+################################
+# log posterior: poisson regression
 
+log_posterior_poisson_regression_betas <- function(x_target,
+                                                   x_all,
+                                                   data_likelihood,
+                                                   prior_parameters,
+                                                   ){
+    # poisson regression with normal-density on betas
+    # expects the prior_parmaters to have named-entries 'beta_mean' and 'beta_sigma'
+    
+    # variables
+    beta_names <- colnames(data_likelihood$mm) # model matrix colunm-names
+    betas <- x_all[beta_names]
+    
+    # log likelihood
+    mu <- exp(data_likelihood$mm%*%betas)
+    log_like <- sum(dpois(data_likelihood$y, lambda=mu, log=TRUE))
+    
+    # prior
+    log_prior <- dnorm(
+        x_target,
+        mean=prior_parameters['beta_mean'],
+        sd=prior_parameters['beta_sigma'],
+        log=TRUE
+    )
+    return(log_like+log_prior)}
 
+##################################
+# PRIORS:
+list_prior_parameters <- list()
 
-
-
+# prior on intercept
+list_prior_parameters["(Intercept)"] <- list('beta_mean'=0, 'beta_sigma'=10)
+# prior on regression coefficients
