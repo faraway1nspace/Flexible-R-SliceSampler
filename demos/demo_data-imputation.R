@@ -6,6 +6,7 @@
 # We'll do data-imputation of missing data to demonstrate the interwoven functions:
 # we'll do i) one round of slice-sampling the posteriors, then ii) one round of
 # random data-imputation. Theoretically, this is called "Monte Carlo" integration.
+# Importantly, we can tailor our favourite data-imputation methods, or a mixture of many.
 
 # SCENARIO: a common problem with getting field-data in ecology (like counts of
 # animals) is uncertainty. We've encountered situations where some of the recorded
@@ -38,8 +39,21 @@ y <- rpois(n, lambda=exp(mm%*%betas_true))
 #######################
 # SIMULATE MISSING DATA
 
+# the imputed data will NOT be missing-at random. Like in ecology, there will be 
+# more missingness with higher-counts
 
+# sample missing data ~ counts (higher-counts more likely missing)
+idx_missing <- sort(sample(1:n, size=4,prob=sqrt(y)))
 
+# n x 4 matrix including min/best/max values
+y_minbestmax <- matrix(NA, n,4,dimnames=list(1:n, c('count','min','best','max')))
+y_minbestmax[,'count'] <- y
+y_minbestmax[idx_missing,'count']<- NA # missing data
+
+# add min max best values for y
+for(idx_miss in idx_missing){
+
+}
 
 
 
