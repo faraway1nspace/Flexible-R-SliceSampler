@@ -34,7 +34,7 @@ x_data <- as.data.frame(setNames(lapply(1:3,function(x){ runif(n,-2,2)}),beta_na
 # model matrix
 mm <- model.matrix(~x1+x2+x3, data=x_data)
 # true y variable
-y <- rpois(n, lambda=exp(mm%*%betas_true))
+y_true <- rpois(n, lambda=exp(mm%*%betas_true))
 
 #######################
 # SIMULATE MISSING DATA
@@ -43,17 +43,28 @@ y <- rpois(n, lambda=exp(mm%*%betas_true))
 # more missingness with higher-counts
 
 # sample missing data ~ counts (higher-counts more likely missing)
-idx_missing <- sort(sample(1:n, size=4,prob=sqrt(y)))
+idx_missing <- sort(sample(1:n, size=4,prob=y_true))
+print(y_true[idx_missing])
 
 # n x 4 matrix including min/best/max values
 y_minbestmax <- matrix(NA, n,4,dimnames=list(1:n, c('count','min','best','max')))
-y_minbestmax[,'count'] <- y
+y_minbestmax[,'count'] <- y_true
 y_minbestmax[idx_missing,'count']<- NA # missing data
 
 # add min max best values for y
-for(idx_miss in idx_missing){
-
+for(idx in idx_missing){
+    # random min best max values centred around the y-true
+    y_minbestmax[idx,c('min','best','max')] <- sort(c(
+        max(0, sample(round(seq(y_true[idx]*0.80,y_true[idx]*0.95)),size=1)),
+        max(0, sample(round(seq(y_true[idx]*0.90,y_true[idx]*1.1)),size=1)),
+        max(0, sample(round(seq(y_true[idx]*1.1,y_true[idx]*1.3)),size=1))
+    ))
 }
+
+print('done simulating the data')
+
+####################
+# IMPUTATION-FUNCTION 
 
 
 
