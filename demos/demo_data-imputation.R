@@ -64,7 +64,24 @@ for(idx in idx_missing){
 print('done simulating the data')
 
 ####################
-# IMPUTATION-FUNCTION 
+# IMPUTATION-FUNCTION
+
+# truncated rpoisson: sample poisson centred on lambda, between [min,max]
+rpois_truncated <- function(lambda, min, max){
+    # rpois, truncated
+    x <- seq(min,max,1)
+    x_density <- dpois(x, lambda=lambda)
+    return(sample(x, size=1, prob = x_density/sum(x_density)))}
+
+# 
+impute <- function(min, best, max, p=0.5){
+    # complex imputation function: mixture of 'best' and a rpois(truncated)
+    best_or_rpois <- runif(1) # toggle between
+    # just return the best-guess
+    if(best_or_rpois < p){ return(best) }
+    # truncated poission imputation: sampled on 'best'
+    return( rpois_truncated(lambda=best, min=min, max=max) )}
+
 
 
 
