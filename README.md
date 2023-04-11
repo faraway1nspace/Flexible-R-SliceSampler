@@ -225,9 +225,9 @@ In the folloing example, imagine our missing data consists of "min/max/best-gues
 |12| | | |
 |30|
 |1 |
-|NA | 20 | 25 | 30
+|NA | 20 | 25 | 35
 |3|
-
+|NA | 1|2|5|
 ...
 
 
