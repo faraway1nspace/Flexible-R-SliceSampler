@@ -102,7 +102,7 @@ log_posterior_ziplambda <- function(x_target,
         sd=prior_parameters[['prior_lambda_sigma']], # note the sqrt(1/tau) for JAGS-compatibility,
         log=TRUE
     )
-	# return unnormalized posterior
+    # return unnormalized posterior
     return(loglike + log_prior)}
 	
 # log-posterior with Beta prior on `psi` (the zero-inflation parameter)
@@ -125,7 +125,7 @@ log_posterior_zippsi <- function(x_target,
         shape2=prior_parameters[['prior_psi_b']],
 		log=TRUE
     )
-	# return unnormalized log-posterior
+    # return unnormalized log-posterior
     return(loglike + log_prior)}
 	
 
