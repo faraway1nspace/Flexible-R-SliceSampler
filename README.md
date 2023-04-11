@@ -12,7 +12,7 @@ Be sure to check out our examples in `demos/`. And be sure to read above the key
 
 - `src/flexible_slice_sampler.R` - source code with flexible slice sampler
 - `src/example_log-posteriors.R` - some example log-posteriors to inspire you to craft your own log-posteriors
-- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
+- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso ($\ell_1$-regularization)
 - `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
 - `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
 
@@ -39,7 +39,7 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - You have a simple model with simple data that is easily run in JAGS/BUGS
 - You're unfamiliar with likelihoods and have difficulty making R-likelihood functions
 
-## Syntax Comparison to JAGS
+## EXAMPLE #1: Syntax Comparison to JAGS
 
 Let's run a Zero-Inflated poisson model, with poisson variable `lambda` and zero-inflation variable `psi`. Let's say the data is simply: `y <- c(1,0,0,0,10,0,3,0,0,0,0,0,0,30)`. 
 
@@ -147,7 +147,7 @@ The log-posterior functions are collected in a named-list `list_of_log_posterior
 Read below for more about the other arguments of `slice.sample`. Or, have a look at the following demo files.
 
 
-## Slice Sampling Overview.
+## BACKGROUND: Slice Sampling Overview
 
 Neal (2003) describes a rejection-free method of MCMC sampling for complex multivariate joint-posteriors. _Slice-Sampling also has relatively few "tunable" hyperparameters, unlike some Metropolis-Hastings-like methods that fail to converge if the hyperparameters are poorly set.
 
@@ -180,7 +180,9 @@ Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point
 | :memo:        | We have found that the best step-size (`W`) is the long-run average of `R-L` over the entire density. Therefore, during sampling, we can monitor R and L, and slowly adjust W to the long-run average of R-L |
 |---------------|:------------------------|
 
-### Key Arguments for `slice.sample`.
+### KEY ARGUMUMENTS FOR `slice.sample`
+
+The core function is `slice.sample` in `src/flexible_slice_sampler.R`. We now go over the key arguments.
 
 
 - `x.init` - initial estimates of all variables
@@ -195,20 +197,25 @@ Notice there is some hand-waiving for the steps 2 & 3 ("find the left-most point
 - `w_auto_adjust=TRUE` - whether to auto-adjust `w`, if FALSE, then `w` is fixed
 - `w_auto_adjust_factor=0.8` - a decay factor to slowly harden the auto-adjusted estimates of `w`
 
-You'll need to custom-code the `list_of_log_posteriors`, and the `data_likelihood` and priors, obviously. 
+You'll need to custom-code the `list_of_log_posteriors`, and the `data_likelihood`, and priors in `prior_parameters_list`. 
+
+You're ability to parameterize the data and priors should be obvious. The difficult part will be to custom-codie the log-posteriors, but _if you can do it in JAGS/BUGS, you should be able to do so much easier in native-R_ for the log posteriors. 
+
+See example log-posteriors in `src/example_log-posteriors.R`
+
+See demo-examples how to use the slice.sample function in the demo files (like `demo/demo_multivariate_regression_with_student-t_priors.R` and `demo/demo_jags_vs_slice_zeroInflatedPoisson.R`).
 
 
-## Another Example: Interweaving Slice-Sampling with Other Steps
+## EXAMPLE #2: Interweaving Slice-Sampling with Other Gibbs-Steps
 
-The thing I love about `slice.sample` (and why we used it in Rankin & Marsh (2020)) is because, unlike JAGS/BUGs, we can interweave slice-sampling with other MCMC steps. 
+The main thing I love about `slice.sample` (and why it is used in Rankin & Marsh (2020)) is because, unlike JAGS/BUGs, we can interweave slice-sampling with other Monte Carlo steps, in R.
 
-For example, maybe for each k-slice-sampling steps, we want to impute new missing data. Or, we want to subsample.
+For example, dynamic imputation of missing data, per MCMC iteration.. Or, we may want to subsample the dadta per iteration. Mixing data with stochastic variables is difficult BUGS/JAGS, but trivial using R and slice.sample
 
-See the following script which showcases data-imputation
+See the following script which showcases dynamic data-imputation:
 - `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
 
-
-## Citation
+## CITATION
 
 If you use this slice-sampler, please cite the following study:
 
