@@ -154,7 +154,8 @@ x.uppb <- c(log(100),10,10,10)
 x.lowb <- c(log(0.001),-10,-10,-10)
 
 ########################
-# MCMC: 1 STEP SLICE, 1 STEP DATA-IMPUTATION
+# MCMC: WITH DYNAMIC DATA-IMPUTATION INTERWOVEN IN MCMC
+# Two steps: i) impute new data; ii) sample posteriors
 
 mcmc_samples <- matrix(NA, n_mcmc, length(x.init), dimnames=list(1:n_mcmc, names(x.init)))
 
@@ -164,6 +165,7 @@ for(j in 1:n_mcmc){
 
     # step 1: data imputation : sample min/best/max
     y_imputed <- y_minbestmax
+    # loop through missing values to imput
     for(idx in idx_missing){
         y_imputed[idx,'count'] <- impute(
             min=y_minbestmax[idx,'min'],
@@ -193,8 +195,8 @@ for(j in 1:n_mcmc){
 
     # simple take the smoothed mean of w
     w_star <- slice_samps$w
-    w <- w*0.8 + 0.2*w_star
-    # print the w to monitor converge
+    w <- w*0.8 + 0.2*w_star # moving average of w
+    # print the w to monitor its converge
     if(j%%20==0){ print(as.numeric(w))}
     
     # store MCMC sample
@@ -214,3 +216,4 @@ print(apply(mcmc_samples,2,function(x){quantile(x,c(0.025,0.975))}))
 
 
 ###########
+# COMPARE TO STATIC-IMPUTATION
