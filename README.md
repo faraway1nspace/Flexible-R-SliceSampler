@@ -11,9 +11,10 @@ Be sure to check out our examples in `demos/`. And be sure to read above the key
 ## Files
 
 - `src/flexible_slice_sampler.R` - source code with flexible slice sampler
+- `src/example_log-posteriors.R` - some example log-posteriors to inspire you to craft your own log-posteriors
 - `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso (l1-regularization)
 - `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
-
+- `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
 
 ## Motivation: Why use Flexible-R-SliceSampler (vs. JAGS or BUGS)
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
@@ -203,8 +204,8 @@ The thing I love about `slice.sample` (and why we used it in Rankin & Marsh (202
 
 For example, maybe for each k-slice-sampling steps, we want to impute new missing data. Or, we want to subsample.
 
-TODO - example of interweaving slice sampling and other 
-
+See the following script which showcases data-imputation
+- `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
 
 
 ## Citation
