@@ -16,9 +16,9 @@
 # integers and min/best-guess/max.
 
 set.seed(42)
-
+library(coda)
 source("../src/flexible_slice_sampler.R")
-source("../src/example_log-posteriors.R"
+source("../src/example_log-posteriors.R") # import the log-posteior
 
 ###############
 # SET-UP X-DATA
@@ -100,7 +100,7 @@ print(y_imputed)
 log_posterior_poisson_regression_betas <- function(x_target,
                                                    x_all,
                                                    data_likelihood,
-                                                   prior_parameters,
+                                                   prior_parameters
                                                    ){
     # poisson regression with normal-density on betas
     # expects the prior_parmaters to have named-entries 'beta_mean' and 'beta_sigma'
@@ -116,16 +116,101 @@ log_posterior_poisson_regression_betas <- function(x_target,
     # prior
     log_prior <- dnorm(
         x_target,
-        mean=prior_parameters['beta_mean'],
-        sd=prior_parameters['beta_sigma'],
+        mean=prior_parameters[['beta_mean']],
+        sd=prior_parameters[['beta_sigma']],
         log=TRUE
     )
     return(log_like+log_prior)}
 
+
+list_log_posteriors <- list(
+    '(Intercept)'=log_posterior_poisson_regression_betas,
+    'x1'=log_posterior_poisson_regression_betas,    
+    'x2'=log_posterior_poisson_regression_betas,
+    'x3'=log_posterior_poisson_regression_betas
+)
+    
 ##################################
 # PRIORS:
 list_prior_parameters <- list()
-
 # prior on intercept
-list_prior_parameters["(Intercept)"] <- list('beta_mean'=0, 'beta_sigma'=10)
+list_prior_parameters[["(Intercept)"]] <- list('beta_mean'=log(10), 'beta_sigma'=10)
 # prior on regression coefficients
+for(beta_name in beta_names){
+    list_prior_parameters[[beta_name]] <- list('beta_mean'=0, 'beta_sigma'=1)
+}
+
+##################
+# INITIAL VALUES FOR SAMPLER
+x.init <- setNames(rep(0,ncol(mm)), nm=colnames(mm))
+x.init['(Intercept)'] <- log(mean(y_minbestmax[,1],na.rm=TRUE))
+
+###################
+# PARAMETERS FOR SLICE SAMPLER
+
+n_mcmc <- 4000
+w <- setNames(c(0.5,0.5,0.5,0.5), nm=names(x.init))
+x.uppb <- c(log(100),10,10,10)
+x.lowb <- c(log(0.001),-10,-10,-10)
+
+########################
+# MCMC: 1 STEP SLICE, 1 STEP DATA-IMPUTATION
+
+mcmc_samples <- matrix(NA, n_mcmc, length(x.init), dimnames=list(1:n_mcmc, names(x.init)))
+
+# MCMC
+x_star <- x.init
+for(j in 1:n_mcmc){
+
+    # step 1: data imputation : sample min/best/max
+    y_imputed <- y_minbestmax
+    for(idx in idx_missing){
+        y_imputed[idx,'count'] <- impute(
+            min=y_minbestmax[idx,'min'],
+            best=y_minbestmax[idx,'best'],
+            max=y_minbestmax[idx, 'max'],
+            0.3)
+    }
+
+    # (dynamic) data with imputed values
+    data_likelihood <- list(y = y_imputed[,'count'],mm = mm)
+
+    # step2: slice-sample
+    slice_samps <- slice.sample(
+        x_star, # initial estimates of variables
+        list_log_posteriors, # list of log-posterior densities per variable
+        data_likelihood, # y data and model-matrices
+        list_prior_parameters, # hyperparameters for priors
+        nslice=4, # number of slices
+        x.lowb, # lower safety bounds on variables
+        x.uppb, # upper safety bounds on variables
+        w=w, # W hyperparameter governing Slice Sampler (see Details)
+        m=12 # number of steps of W (see Details)
+        )
+    
+    # update x_star with last sample from slice-sampler
+    x_star <- tail(slice_samps$samples, 1)[1,]
+
+    # simple take the smoothed mean of w
+    w_star <- slice_samps$w
+    w <- w*0.8 + 0.2*w_star
+    # print the w to monitor converge
+    if(j%%20==0){ print(as.numeric(w))}
+    
+    # store MCMC sample
+    mcmc_samples[j,]<- x_star
+}
+
+# inspect converge
+plot(mcmc(mcmc_samples))
+
+# get posterior means and compare to true
+print(colMeans(mcmc_samples))
+print(betas_true)
+
+print(apply(mcmc_samples,2,sd))
+# 95%CI
+print(apply(mcmc_samples,2,function(x){quantile(x,c(0.025,0.975))}))
+
+
+###########
