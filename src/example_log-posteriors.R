@@ -1,9 +1,8 @@
 
-
 log_posterior_poisson_regression_betas <- function(x_target,
                                                    x_all,
                                                    data_likelihood,
-                                                   prior_parameters,
+                                                   prior_parameters
                                                    ){
     # poisson regression with normal-density on betas
     # expects the prior_parmaters to have named-entries 'beta_mean' and 'beta_sigma'
@@ -20,9 +19,11 @@ log_posterior_poisson_regression_betas <- function(x_target,
     # prior
     log_prior <- dnorm(
         x_target,
-        mean=prior_parameters['beta_mean'],
-        sd=prior_parameters['beta_sigma'],
+        mean=prior_parameters[['beta_mean']],
+        sd=prior_parameters[['beta_sigma']],
         log=TRUE
     )
     return(log_like+log_prior)}
+
+
            
