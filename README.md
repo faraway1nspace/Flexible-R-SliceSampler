@@ -249,7 +249,7 @@ for(j in 1:n_mcmc){
     } # done dynamic imputation
 
     # add (dynamic) imputed data to the `data_likelihood` input for slice.sample
-    data_likelihood <- list(y = y_imputed[,'count'],mm = mm)
+    data_likelihood <- list(y = y_imputed[,'count'],mm = X)
 
     # STEP 2: slice-sample from posteriors conditional on y-imputed
     slice_samps <- slice.sample(
