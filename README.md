@@ -242,11 +242,8 @@ for(j in 1:n_mcmc){
 	
     # loop through missing values to imput
     for(idx in idx_missing){
-		
-		y_min <- y[idx, 'min']
-		y_max <- y[idx,'max']
-		y_best <- y[idx,'best']
-        # impute y using min/best/max function
+        # impute y using min/best/max function		
+        y_min <- y[idx, 'min']; y_max <- y[idx,'max']; y_best <- y[idx,'best']
         y_imputed[idx,'count'] <- impute(y_min,y_best,y_max)
 		
     } # done dynamic imputation
@@ -272,7 +269,7 @@ for(j in 1:n_mcmc){
 
     # moving average update of the `W` parameter (SEE BACKGROUND to learn more)
     w_star <- slice_samps$w
-    w <- w*0.8 + 0.2*w_star # moving average of w
+    w <- 0.8*w + 0.2*w_star # moving average of w
 	
     # store MCMC sample
     mcmc_samples[j,]<- x_star
