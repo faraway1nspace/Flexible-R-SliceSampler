@@ -81,7 +81,7 @@ In particular, for each variable (`lambda` and `psi`), we must write a log-poste
 Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc.:
 
 ```R
-# log posterior with log-normal density on lambda
+# log posterior with log-normal prior on `lambda` (the poisson process)
 log_posterior_ziplambda <- function(x_target,
                                     x_all,
                                     data_likelihood,
@@ -102,9 +102,10 @@ log_posterior_ziplambda <- function(x_target,
         sd=prior_parameters[['prior_lambda_sigma']], # note the sqrt(1/tau) for JAGS-compatibility,
         log=TRUE
     )
+	# return unnormalized posterior
     return(loglike + log_prior)}
 	
-# log-posterior with Beta prior on psi
+# log-posterior with Beta prior on `psi` (the zero-inflation parameter)
 log_posterior_zippsi <- function(x_target,
                                  x_all,
                                  data_likelihood,
@@ -121,9 +122,10 @@ log_posterior_zippsi <- function(x_target,
     log_prior <- dbeta(
         x_target,
         shape1=prior_parameters[['prior_psi_a']],
-        shape2=prior_parameters[['prior_psi_b']],        
-        log=TRUE
+        shape2=prior_parameters[['prior_psi_b']],
+		log=TRUE
     )
+	# return unnormalized log-posterior
     return(loglike + log_prior)}
 	
 
