@@ -167,6 +167,8 @@ for(j in 1:n_mcmc){
     y_imputed <- y_minbestmax
     # loop through missing values to imput
     for(idx in idx_missing){
+
+        # impute y using min/best/max function
         y_imputed[idx,'count'] <- impute(
             min=y_minbestmax[idx,'min'],
             best=y_minbestmax[idx,'best'],
@@ -216,4 +218,34 @@ print(apply(mcmc_samples,2,function(x){quantile(x,c(0.025,0.975))}))
 
 
 ###########
-# COMPARE TO STATIC-IMPUTATION
+# COMPARE TO STATIC-IMPUTATION 
+# how do the values compare to just imputing the "best" values only
+
+
+y_imputed <- y_minbestmax
+for(idx in idx_missing){ y_imputed[idx,'count'] <- y_minbestmax[idx,'best']}
+data_likelihood <- list(y = y_imputed[,'count'],mm = mm)
+
+slice_samps <- slice.sample(
+        x.init, # initial estimates of variables
+        list_log_posteriors, # list of log-posterior densities per variable
+        data_likelihood, # y data and model-matrices
+        list_prior_parameters, # hyperparameters for priors
+        nslice=4000, # number of slices
+        x.lowb, # lower safety bounds on variables
+        x.uppb, # upper safety bounds on variables
+        w=w, # W hyperparameter governing Slice Sampler (see Details)
+        m=12 # number of steps of W (see Details)
+)
+
+# posterior means of static-imputation
+print(colMeans(slice_samps$samples)) # static
+# compare to dynamic imputation
+print(colMeans(mcmc_samples)) # dynamic
+
+# posterior variance/sd
+print(apply(slice_samps$samples,2,sd)) # static
+print(apply(mcmc_samples,2,sd)) # dynamic
+
+
+
