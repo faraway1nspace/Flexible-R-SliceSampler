@@ -217,6 +217,71 @@ For example, dynamic imputation of missing data, per MCMC iteration.. Or, we may
 See the following script which showcases dynamic data-imputation:
 - `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
 
+
+In the folloing example, imagine our missing data consists of "min/max/best-guess"-type data. This is common in wildlife biology, where field-biologists often have to _guess_ the min/max of things, like, counts of dolphins.
+
+| counts | min | best-guess | max |
+|:---:|:---:|:---:|:---:|
+|12| | | |
+|30|
+|1 |
+|NA | 20 | 25 | 30
+|3|
+
+...
+
+
+```R
+x_star <- x.init # initalize `x` variables to sample
+
+# mcmc
+for(j in 1:n_mcmc){
+
+    # STEP 1: data imputation : sample min/best/max
+    y_imputed <- y # copy raw data with missing data
+	
+    # loop through missing values to imput
+    for(idx in idx_missing){
+		
+		y_min <- y[idx, 'min']
+		y_max <- y[idx,'max']
+		y_best <- y[idx,'best']
+        # impute y using min/best/max function
+        y_imputed[idx,'count'] <- impute(y_min,y_best,y_max)
+		
+    } # done dynamic imputation
+
+    # add (dynamic) imputed data to the `data_likelihood` input for slice.sample
+    data_likelihood <- list(y = y_imputed[,'count'],mm = mm)
+
+    # STEP 2: slice-sample from posteriors conditional on y-imputed
+    slice_samps <- slice.sample(
+        x_star, # initial estimates of variables
+        list_log_posteriors, # list of log-posterior densities per variable
+        data_likelihood, # y data and model-matrices
+        list_prior_parameters, # hyperparameters for priors
+        nslice=4, # number of slices
+        x.lowb, # lower safety bounds on variables
+        x.uppb, # upper safety bounds on variables
+        w=w, # W hyperparameter governing Slice Sampler (see Details)
+        m=12 # number of steps of W (see Details)
+        )
+    
+    # update x_star with last sample from slice-sampler
+    x_star <- tail(slice_samps$samples, 1)[1,]
+
+    # moving average update of the `W` parameter (SEE BACKGROUND to learn more)
+    w_star <- slice_samps$w
+    w <- w*0.8 + 0.2*w_star # moving average of w
+	
+    # store MCMC sample
+    mcmc_samples[j,]<- x_star
+}
+
+```
+
+
+
 ## CITATION
 
 If you use this slice-sampler, please cite the following study:
