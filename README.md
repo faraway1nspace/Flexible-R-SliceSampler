@@ -1,12 +1,12 @@
 # Flexible-R-SliceSampler
 
-Just another Slice Sampler for Bayesian Sampling -- but highly efficient and flexible in pure R (i.e., no more weird JAGS/BUGS/STAN synatx ). 
+Just another Slice Sampler for Bayesian Sampling -- but highly efficient and flexible in pure R (i.e., no more weird JAGS/BUGS/STAN syntax ). 
 
-Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") when JAGS/BUGs exists? We used in Rankin et al 2020 for a complex Bayesian analysis of Dugongs which could be run in JAGS... here was missing data, complex mixture priors, and a hierarchical process that required a custom Gibbs sampler. 
+Why would you want a pure-R Gibbs Sampler (and specifically a "Slice Sampler") when JAGS/BUGs exists? We used this sampler in [Rankin and Marsh, 2020](#CITATION) for a complex Bayesian analysis of Dugongs which could not be run in JAGS or STAN... we had missing data, complex mixture priors, and a hierarchical process that required a custom Gibbs sampler. 
 
-The Slice Sampler (based on Neal 2003) worked so well, I decided to open-source it for others
+Our Slice Sampler (based on Neal 2003) worked so well, that I decided to open-source it for others. 
 
-Be sure to check out our examples in `demos/`. And be sure to read above the key-parameters below.
+Be sure to check out our examples in `demos/`. And be sure to read about the key-parameters below.
 
 ## Files
 
@@ -38,6 +38,8 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 ### Reasons NOT to use Flexible-R-SliceSampler (vs. JAGS/BUGS)
 - You have a simple model with simple data that is easily run in JAGS/BUGS
 - You're unfamiliar with likelihoods and have difficulty making R-likelihood functions
+
+In regards to the past point, each model/study will require its own likelihoood-functions and prior-functions, so you'll need to custom-write these functions anew every time. This may seem cumbersome, but it is the cost of being *flexible*.
 
 ## EXAMPLE #1: Syntax Comparison to JAGS
 
@@ -76,7 +78,7 @@ jags_model_syntax <- "model{
 
 We will now re-write the above JAGS ZIPpoisson model using pure **R-functions** to run the `slice.sample` function. It is easy.
 
-In particular, for each variable (`lambda` and `psi`), we must write a log-posterior function that ingests the data, the prior parameters, and computes the log-likelihood at `x` and the log-prior-density at `x`. Importantly, the posteriors can be **unnormalized**, so we merely have to return the log-likelihood and log-prior-density at `x`.
+In particular, for each variable to sample (e.g. `lambda` and `psi`), we must write a log-posterior function that ingests the data, the prior parameters, and computes the log-likelihood at `lambda=x` and the log-prior-density at `lambda=x`. Importantly, the posteriors can be **unnormalized**, so we merely have to return the log-likelihood and log-prior-density at `x`.
 
 Here are the log-posterior functions for `lambda` and `psi`, which correspond to the above JAGS/BUGS model. Notice that we make use of native R density functions like `dnorm`, `dpois`, etc.:
 
@@ -135,16 +137,30 @@ list_of_log_posteriors = list(
 	"psi" = log_posterior_zippsi
 )	
 ```
-Each study will have it's own likelihoood and priors, so you'll need to custom-write these functions anew each time. This may seem cumbersome, but it is *flexible*.
 
-Each log-posterior density function must have the same arguments:
-- `x_target`: the candidate value of the variable for that posterior function
+Notice that each log-posterior density function must have the same arguments:
+- `x_target`: the candidate value of the variable for the posterior function
 - `x_all`: a named numeric variable with _all_ variables in a vector, needed to compute the likelihood.
 - `data_likelihood`: a named-list with all the data necessary to compute the likellihood (like the  JAGS argument `data`)
 - `prior parameters`: a named-list with the prior-parameters for each variable to sample
 
 
 The log-posterior functions are collected in a named-list `list_of_log_posteriors`, with an entry for each variable to sample (lambda and psi). The list is passed as an argument `slice.sample` function. 
+
+```R
+samples_mcmc <- slice.sample(
+    x.init=c('lambda'=10, 'psi'=0.5), # initial estimates of variables
+    list_of_log_posteriors, # list of log-posterior densities per variable
+    data_likelihood, # y data and model-matrices
+    prior_parameters_list, # hyperparameters for priors
+    nslice=4000, # number of slices
+    x.lowb=c(0.000001,0.0000001), # lower safety bounds on variables
+    x.uppb=c(60,0.9999999), # upper safety bounds on variables
+    w=c(5, 0.3), # W hyperparameter governing Slice Sampler (see Details)
+    m=10, # number of steps of W (see Details)
+    )
+```
+
 
 Read below for more about the other arguments of `slice.sample`. Or, have a look at the following demo files.
 
