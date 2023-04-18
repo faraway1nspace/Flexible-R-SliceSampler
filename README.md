@@ -180,7 +180,7 @@ Usually, if the `W` step-sizes don't converge, there is something _else_ wrong w
 Given a point $x$ and posterior-density function $f(x)$, we:
 1. sample $z$ uniformly along vertical from 0 to f(x): $z\sim\mathcal{U}(0,f(x))$
 2. find the left-most point ($L$) at which $f(L) = z$
-3. find the right-most point ($R$) at which $f(R) == z$
+3. find the right-most point ($R$) at which $f(R) = z$
 4. sample a new $x_{\text{new}}$ uniformly between $L$ and $R$ : $x_{\text{new}}\sim\mathcal{U}(L,R)$
 5. If $f(x_{\text{new}}) > z$ then accept $x = x_{\text{new}}$, and move-on to next variable
 6. If not then "shrink" the boundaries L and R:  
