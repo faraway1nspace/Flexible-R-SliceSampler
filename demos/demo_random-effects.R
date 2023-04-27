@@ -293,20 +293,22 @@ for(x.nm in names(x.init.sigmas)){
 # RUN THE SLICE SAMPLE
 out <- slice.sample(
     x.init, # initial estimates of variables
-    list_of_log_posteriors=list_of_log_posteriors,
+    list_of_log_posteriors=list_of_log_posteriors, # list of posterior-densities
     data_likelihood=data_likelihood, # y data and model-matrices
     prior_parameters_list=list_of_priors, # hyperparameters for priors
-    nslice=5000,
-    thin = 5,
-    x.lowb=x.lowb,
-    x.uppb=x.uppb,
-    w=w.slice,
+    nslice=5000, # number of samples to collect
+    thin = 5, # thinning the MCMC
+    x.lowb=x.lowb, # sensible lower bounds to all variables
+    x.uppb=x.uppb, # sensible upper bounds to all variables
+    w=w.slice, # W slice step
     m=12, # steps to shift W
-    pass.counter=2000,
+    pass.counter=2000, # rejection sampling fallback n-steps
     w_auto_adjust=TRUE, # whether to auto-adjust w
     w_auto_adjust_factor=0.5, # auto-adjustment factor
     print_interval=50  # print interval                       
 )
+# the slice sampler mixes well: 
+# ... watch the w values: they should coverge and not be crazy-high
 
 # get samples from Slice Samples
 ss.samp <- out$samples
