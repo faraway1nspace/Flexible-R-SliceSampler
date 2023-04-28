@@ -1,34 +1,41 @@
 
-# default functions
+source('run_tests.R',chdir = TRUE)
+
+# core function: slice sampler
 slice.sample <- function(x.init, # initial estimates of variables
                          list_of_log_posteriors, #log.densities.list, per variable in x
                          data_likelihood, # y data and model-matrices
                          prior_parameters_list, # hyperparameters for priors, per variable in x
-                         nslice=2000,
-                         thin=1,
-                         x.lowb=rep(-10^6, length(x.init)),
-                         x.uppb=rep(10^6, length(x.init)),
+                         nslice=2000, # number of samples to collect
+                         thin=1, # thinning (accept only every `thin` sample, discard rest 
+                         x.lowb=rep(-10^6, length(x.init)), # sensible lower bounds on variables
+                         x.uppb=rep(10^6, length(x.init)),  # sensible upper bounds on variables
                          w=rep(3.0,length(x.init)),
                          m=10, # steps to shift W
                          pass.counter=1000,
                          w_auto_adjust=TRUE, # whether to auto-adjust w
                          w_auto_adjust_factor=0.8, # auto-adjustment factor
-                         print_interval=100  # print interval                       
+                         print_interval=100,  # print interval,
+                         do_checks = TRUE # run pre-sampler checks on data and arguments
                          ){
-    #' Gibbs Slice sampler, native to R
+    #' A Native R Slice sampler based on "Neal RM 2003 "Slice Sampling". doi:10.1214/aos/1056562461
     #' x.init: numeric vector of initial estimates
     #' data: y-data and model-matrix for ingestion by likelihood function
     #' list_of_log_posteriors: a list of (log) density functions for each parameter in x, typically the log-prior + log-likelihood. See details
     #' prior_parameters_list: list of hyperparameters 
     #' nlice: int, number of slices to sample / number of iterations
+    #' thin: int, number of steps to run sampler and discard samples, improves mixing
     #' x.lowb: numeric float, lower-bounds of x.init
     #' x.uppb: numeric float, upper-nounds of x.init
-    #' w: window parameters: the most important hyperparameter to guide behaviour: see Details
-    #' m: see Slice Sampling Paper
+    #' w: slice step-size parameter: the most important hyperparameter to guide behaviour: see Details
+    #' m: default number of steps of step-size W. see Slice Sampling Paper by Neal 2003
     #' pass.counter: last-ditch rejection sampling if things go badly
     #' print_interval: how often to print w-slices estimates
     #' w_auto_adjust: bool, whether to auto-adjust the w-slice intervals
     #' w_auto_adjust_factor: float, smoothing-factor to mix new w estimates with past estimates
+
+    # run checks on data and arguments
+    if( do_checks ){ check_args_and_data(x.init, list_of_log_posteriors, data_likelihood, prior_parameters_list, nslice, thin, x.lowb, x.uppb, w, m, pass.counter, w_auto_adjust, w_auto_adjust_factor, print_interval) } # pass
     
     # number of parameters to sample
     npar <- length(x.init)
@@ -48,13 +55,13 @@ slice.sample <- function(x.init, # initial estimates of variables
 
         for(j in 1:thin){
 
-        # loop through each parameter p: we sample univariately, conditional on other parameters
+            # loop through each parameter p: we sample univariately, conditional on other parameters
             for(p in 1:npar){ # 
 
                 # target density for this parameter p
                 log_density_for_p = list_of_log_posteriors[[p]]
             
-                # get (posterio) density at x=x
+                # get (log-posterior) density of x at x
                 log_f_at_x <- log_density_for_p(
                     x_target=x[[p]],                
                     x_all=x,
@@ -62,7 +69,7 @@ slice.sample <- function(x.init, # initial estimates of variables
                     prior_parameters_list[[p]]
                 )
             
-                # sample random slice height < f(x) y.r
+                # sample random slice height < f(x):  
                 random_slice_height <- log_f_at_x - rexp(1,1)
 
                 # sample window size (adjustment factor to grow L)
@@ -177,9 +184,9 @@ slice.sample <- function(x.init, # initial estimates of variables
                 # monitor our slice of R[p]-L[p] (we'll use it to dynamically adjust w)
                 w_monitor_slice_size[p] <- R[p]-L[p]
                 
-            } # thin
+            } # p
             
-        } # p
+        } # thin
         # done loopting through all parameters p
 
         # accept x into our storage container
@@ -234,3 +241,4 @@ logdensity_univariatemean_norm <- function(
 log_studentt<- function(x, df=1, mu=0, sigma=1){
     return( log(1)-log(sigma) + dt((x - mu)/sigma, df, log=TRUE) )
 }
+
