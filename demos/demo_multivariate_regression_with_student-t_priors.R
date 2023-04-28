@@ -6,7 +6,7 @@
 # CONCLUSION: we'll show that the Student-T priors induce a type of l1-regularization (i.e., shrinkage of some parameters towards 0, which is a type of model selection). In the Lasso, it is induced by a penalty on the L1-norm of the parameter values. Wheras in the Bayesian Estimation, it is induced by a 'Spike and slab'-like prior -- a Student-T that is spiked at 0, but with long tails in higher-values. This pushes unimportant variables towards zero, and important variables are free to take on high values.
 
 # import Slice Sampler
-source("../src/flexible_slice_sampler.R")
+source("../src/flexible_slice_sampler.R", chdir=TRUE)
 
 library(glmnet) # to compare against Ridge Regression
 library(coda) # for MCMC visuals
@@ -171,6 +171,7 @@ samples_mcmc <- slice.sample(
     data_likelihood, # y data and model-matrices
     prior_parameters_list, # hyperparameters for priors
     nslice=4000, # number of slices
+    thin=1,
     x.lowb, # lower safety bounds on variables
     x.uppb, # upper safety bounds on variables
     w=w.slice, # W hyperparameter governing Slice Sampler (see Details)

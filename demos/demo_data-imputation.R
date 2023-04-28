@@ -17,7 +17,7 @@
 
 set.seed(42)
 library(coda)
-source("../src/flexible_slice_sampler.R")
+source("../src/flexible_slice_sampler.R", chdir=TRUE) # load sampler
 source("../src/example_log-posteriors.R") # import the log-posteior
 
 ###############
@@ -186,10 +186,12 @@ for(j in 1:n_mcmc){
         data_likelihood, # y data and model-matrices
         list_prior_parameters, # hyperparameters for priors
         nslice=4, # number of slices
-        x.lowb, # lower safety bounds on variables
-        x.uppb, # upper safety bounds on variables
+        thin=1, # thin
+        x.lowb=x.lowb, # lower safety bounds on variables
+        x.uppb=x.uppb, # upper safety bounds on variables
         w=w, # W hyperparameter governing Slice Sampler (see Details)
-        m=12 # number of steps of W (see Details)
+        m=12, # number of steps of W (see Details)
+        do_checks=FALSE
         )
     
     # update x_star with last sample from slice-sampler

@@ -1,12 +1,12 @@
 # A simple comparison of JAGS syntax vs the Flexible R Slice Sampler
 
-source("../src/flexible_slice_sampler.R")
+source("../src/flexible_slice_sampler.R", chdir=TRUE)
 
 library(coda)
 library(rjags)
 
 # zero-inflated count data (we'll model with a Zero-inflated poisson
-y <- c(1,0,0,0,10,0,3,0,0,0, 0,0,0,30)
+y <- c(1,0,0,0,10,0,3,0,0,0,0,0,0,30)
 
 #######
 # JAGS
@@ -138,11 +138,12 @@ samples_mcmc <- slice.sample(
     data_likelihood, # y data and model-matrices
     prior_parameters_list, # hyperparameters for priors
     nslice=4000, # number of slices
+    thin=1,
     x.lowb=c(0.000001,0.0000001), # lower safety bounds on variables
     x.uppb=c(60,0.9999999), # upper safety bounds on variables
     w=c(5, 0.3), # W hyperparameter governing Slice Sampler (see Details)
     m=10, # number of steps of W (see Details)
-    )
+)
 
 # summarize the posterior distributions
 slice_estimates <- apply(

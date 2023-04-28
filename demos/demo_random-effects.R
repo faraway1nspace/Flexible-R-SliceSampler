@@ -7,7 +7,7 @@
 # - individual random-effects for slopes
 # - hafl-Student-T priors on sigmas
 
-source('../src/flexible_slice_sampler.R')
+source('../src/flexible_slice_sampler.R', chdir=TRUE)
 library(rjags)
 library(coda)
 
