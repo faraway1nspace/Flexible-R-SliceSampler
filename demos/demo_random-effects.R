@@ -19,7 +19,6 @@ dstudent_t <- function (x, df, mu = 0, sigma = 1, log=FALSE) {
         return(dt((x - mu)/sigma, df = df)/sigma)
     }}
 
-
 ###############
 # GENERATE DATA: Poisson regression with n=40 individuals, and T=4 observations y each.
 # this is like taking a repeated count 4 times for each i individual
@@ -370,28 +369,6 @@ jags_model_syntax <- "model{
 }"
 cat(jags_model_syntax, file ='/tmp/jags_script.jags',append=FALSE)
 
-jags_model_syntax <- "model{
-   # fixed effects (intercept and trend)
-   beta[1] ~ dnorm(0,1) # intercept
-   beta[2] ~ dnorm(0,1) # trend
-   # hyperprior: half-normal prior on random-effects dispersion
-   #sigma[1] ~ dnorm(0,pow(0.03,-2)) T(0,)
-   #sigma[2] ~ dnorm(0,pow(0.03,-2)) T(0,)
-   sigma[1] ~ dt(0,pow(prior_sigma0,-2), prior_df) T(0,)
-   sigma[2] ~ dt(0,pow(prior_sigma1,-2), prior_df) T(0,)
-   # likelihood
-   for(i in 1:n){
-      epsilon0[i] ~ dnorm(beta[1],pow(sigma[1],-2))
-      epsilon1[i] ~ dnorm(beta[2],pow(sigma[2],-2))
-      for(j in 1:T){
-          Y[j,i] ~ dpois(exp(lambda[j,i]))
-          lambda[j,i] <- epsilon1[i]*(T-1) + epsilon0[i]
-      }
-   }
-}"
-cat(jags_model_syntax, file ='/tmp/jags_script.jags',append=FALSE)
-
-
 # compile jags model
 jags <- jags.model(
     '/tmp/jags_script.jags',
@@ -403,20 +380,28 @@ jags <- jags.model(
         "prior_sigma0"=0.05,
         "prior_sigma1"=0.001
         ),
-    n.chains = 1, n.adapt = 10000, 
+    n.chains = 1, n.adapt = 40000, 
 )
+
+# jags mixes poorly for random-effects models
+plot(mcmc.samples,ask=TRUE)
 
 # run jags
 mcmc.samples <- coda.samples(jags,c('beta','sigma'),2000000,thin=100)
 
 # get jags estimate
 jags_estimates <- apply(mcmc.samples[[1]], 2, function(x){ c('jags-mean'=mean(x),'jags-se'=sd(x))})
-print(jags_estimates)
+# compare jags estimates to true values
+print(jags_estimates) # 
+#            beta[1]   beta[2]   sigma[1]    sigma[2]
+#jags-mean 0.1046751 0.3185370 0.41466436 0.001118042 
+#jags-se   0.9649312 0.3222891 0.07132055 0.001363403 ** EXTREME HIGH VARIANCE
+print(c(beta0, beta1)) # 0.4054651 0.4000000
 
-plot(mcmc.samples,ask=TRUE)
+
 
 ######################################
 # CONCLUSIONS: 
 # - the Flexible R Slice Sampler has much better MCMC mixing that the JAGS random effects.
-# - the Flexible R Slice Sampler more accurate estimates than JAGS for random-effects
+# - the Flexible R Slice Sampler more accurate estimates than JAGS for random-effects, also with lower variance.
 # - JAGS works well for lots of data and fixed-effects, but not for random-effects with difficult distributions (like sparse count)
