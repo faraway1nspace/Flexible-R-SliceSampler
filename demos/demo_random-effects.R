@@ -26,7 +26,7 @@ dstudent_t <- function (x, df, mu = 0, sigma = 1, log=FALSE) {
 generate_fake_poisson_data <- function(seed=42,
                                        n=40, # grouping term (individuals)
                                        T=4, # reps per indi
-                                       beta0=1.5, #intercept
+                                       beta0=log(1.5), #intercept
                                        beta1=0.4, # slope
                                        sigma0=0.4, # root-variance in random-intercepts
                                        sigma1=0.05 # root-variance in random-slopes
@@ -67,7 +67,7 @@ generate_fake_poisson_data <- function(seed=42,
 
 # generate the dat
 simulate_data <- generate_fake_poisson_data(
-    seed=42, n=40, T=4, beta0=1.5, beta1=0.4, sigma0=0.4, sigma1=0.05
+    seed=42, n=40, T=4, beta0=log(1.5), beta1=0.4, sigma0=0.4, sigma1=0.05
 )
 # assign to workspace
 for(varnm in names(simulate_data)){ assign(varnm, simulate_data[[varnm]]) }
@@ -102,6 +102,12 @@ data_likelihood <- list(
     names_randomeffects = names_randomeffects,
     names_sigmas = names_sigmas
 )
+
+#######################################
+# Posterior Functions: 
+# - `log_posterior_REregression_dnorm_prior` - normal prior on fixed effects
+# - `log_posterior_dnormlike_halfStudentt_hyperprior` half-student T on the sigmas that govern the random-effects
+# - `log_posterior_REregression_dnorm_REprior` - the random-effects themselves; notice that he priors
 
 # log posterior with log-normal density on lambda
 log_posterior_REregression_dnorm_prior <- function(x_target,
@@ -143,8 +149,7 @@ log_posterior_REregression_dnorm_prior <- function(x_target,
     )
     return(loglike + log_prior)}
 
-
-# log posterior with log-normal density on lambda
+#
 log_posterior_REregression_dnorm_REprior <- function(x_target,
                                             x_all,
                                             data_likelihood,
@@ -189,6 +194,8 @@ log_posterior_REregression_dnorm_REprior <- function(x_target,
     return(loglike + log_prior)}
 
 
+# a Half-Student-T hyperprior for the sigmas that govern the random effects
+# 
 log_posterior_dnormlike_halfStudentt_hyperprior <- function(x_target,
                                             x_all,
                                             data_likelihood,
@@ -233,25 +240,35 @@ w.slice <- setNames(vector(mode='numeric', length=length(x.init)),nm=names(x.ini
 
 # FIXED EFFECTS - load posteriors, priors, boundaries, and w.slice
 list_of_log_posteriors[names_fixedeffects] <- list(log_posterior_REregression_dnorm_prior)
-x.lowb[names_fixedeffects] <- -10
-x.uppb[names_fixedeffects] <- 10
-w.slice[names_fixedeffects] <- 0.1
-list_of_priors[names_fixedeffects] <- list(list('prior_mean'=0,'prior_sd'=1))
+x.lowb[names_fixedeffects] <- -10 # reasonable lower bounds
+x.uppb[names_fixedeffects] <- 10 # reasonable upper bounds
+w.slice[names_fixedeffects] <- 0.1 # slice-step size initial guess
+list_of_priors[names_fixedeffects] <- list(list(
+        'prior_mean'=0, # normal prior mean, on fixed effects beta0 and beta1
+        'prior_sd'=1, # normal prior sd, on fixed effects beta0 and beta1
+    ))
 
-# HYPERPRIORS - load posteriors, priors, boundaries, and w.slice
+# HYPERPRIORS (sigma)- load posteriors, priors, boundaries, and w.slice
+# sigma0 and sigma1 control the variance of random-effects
+# - sigma0: root-variance of random-effect intercepts
+# - sigma1: root-variance of random-effect slopes
 list_of_log_posteriors[names_sigmas] <- list(log_posterior_dnormlike_halfStudentt_hyperprior)
-x.lowb[names_sigmas] <- 0
-x.uppb[names_sigmas] <- 5
-w.slice[names_sigmas] <- c(0.1,0.03)
+x.lowb[names_sigmas] <- 0 # lower bound >0
+x.uppb[names_sigmas] <- 5 # upper bound on sigmas
+w.slice[names_sigmas] <- c(0.1,0.03) # step size initial guess
 list_of_priors[names_sigmas] <- list(
-    'sigma0'=list('prior_df'=3,'prior_sd'=0.05),
-    'sigma1'=list('prior_df'=3,'prior_sd'=0.001))
+    'sigma0'=list('prior_df'=3,'prior_sd'=0.05), # half-student t hyperprior
+    'sigma1'=list('prior_df'=3,'prior_sd'=0.001) # # half-student t hyperprior
+)
 
 # RANDOM EFFECTS - load posteriors, priors, boundaries, and w.slice
+# - by the definition of 'random effect', the prior parameters on the random
+# effects are themselves variables included as targest of slice-sampling
+# therefore, the "prior parameters" are just an index to grab the correct variable (sigma0 or sigma1) from the vector of variables being sampled
 list_of_log_posteriors[names_randomeffects] <- list(log_posterior_REregression_dnorm_REprior)
-x.lowb[names_randomeffects] <- -10
-x.uppb[names_randomeffects] <- 10
-w.slice[names_randomeffects] <- 0.1
+x.lowb[names_randomeffects] <- -10 # lower bound on random-effects
+x.uppb[names_randomeffects] <- 10  # upper bound on random-effects
+w.slice[names_randomeffects] <- 0.1 # step-size initial guess
 list_of_priors[names_randomeffects] <- list(c(
     rep(list(which_sigma_idx=1),n), # prior is just an index to grab sigma from x
     rep(list(which_sigma_idx=2),n) # prior is just an index to grab sigma from x
@@ -314,19 +331,23 @@ out <- slice.sample(
 ss.samp <- out$samples
 
 # Better mixing than JAGS!
-plot(mcmc(ss.samp),ask=TRUE)
-
+plot(mcmc(ss.samp),ask=TRUE) # ... beautiful mixing
 
 # get posterior means and SE:
 ss_estimates <- apply(ss.samp[,c('beta0','beta1','sigma0','sigma1')], 2, function(x){ c('ss-mean'=mean(x),'ss-se'=sd(x))})
 print(ss_estimates)
+#       beta0      beta1     sigma0      sigma1
+#ss-mean 0.3112876 0.42600474 0.16347697 0.001090720
+#ss-se   0.1008498 0.05173868 0.03150973 0.001232339
+
 # compare to true values
-print(c(beta0, beta1)
+print(c(beta0, beta1)) # 0.4054651 0.4000000
+
 
 
 ####################################
 # PART II: JAGS POISSON RANDOM-EFFECTS COMPARISON
-
+####################################
 
 jags_model_syntax <- "model{
    # fixed effects (intercept and trend)
@@ -371,7 +392,6 @@ jags_model_syntax <- "model{
 cat(jags_model_syntax, file ='/tmp/jags_script.jags',append=FALSE)
 
 
-
 # compile jags model
 jags <- jags.model(
     '/tmp/jags_script.jags',
@@ -387,10 +407,16 @@ jags <- jags.model(
 )
 
 # run jags
-mcmc.samples <- coda.samples(jags,c('beta','sigma'),1000000,thin=500)
+mcmc.samples <- coda.samples(jags,c('beta','sigma'),2000000,thin=100)
 
 # get jags estimate
 jags_estimates <- apply(mcmc.samples[[1]], 2, function(x){ c('jags-mean'=mean(x),'jags-se'=sd(x))})
 print(jags_estimates)
 
 plot(mcmc.samples,ask=TRUE)
+
+######################################
+# CONCLUSIONS: 
+# - the Flexible R Slice Sampler has much better MCMC mixing that the JAGS random effects.
+# - the Flexible R Slice Sampler more accurate estimates than JAGS for random-effects
+# - JAGS works well for lots of data and fixed-effects, but not for random-effects with difficult distributions (like sparse count)
