@@ -309,6 +309,56 @@ In contrast, the _Flexible-R-SliceSampler_ mixes beautifully, and adapts easily,
 
 The only challenge with random-effects models in _Flexible-R-SliceSampler_ is passing the prior-parameters `sigma` for the random-effects: they are both a variable in `x.init` to sample, as well as parameter controlling other variables (the `epsilons`). Our solution is to just make the "prior parameters" of epsilons an index that grabs the sigmas from the `x` vector of dynamic variables.
 
+Here is our log-posterior function for the random-effects `epsilons`, which have `sigma` as their prior-parameters. The model is a Poisson regression with random-intercepts and random-slopes
+
+```R
+log_posterior_REregression_dnorm_REprior <- function(x_target,
+                                            x_all,
+                                            data_likelihood,
+                                            prior_parameters
+                                            ){
+    # data for likelihood: y values
+    Y <- data_likelihood$Y
+    X <- data_likelihood$X
+    n <- data_likelihood$n
+    names_fixedeffects <- data_likelihood$names_fixedeffects
+    names_randomeffects <- data_likelihood$names_randomeffects
+    names_sigmas <- data_likelihood$names_sigmas
+    
+    # get fixed effects
+    betas_vector <- x_all[names_fixedeffects]
+    # get random effects
+    epsilons_vector <- x_all[names_randomeffects]
+    # get names of sigmas (hyperprior)
+    sigmas <- x_all[names_sigmas]
+    
+    # matrices for fixed and random effects
+    BETAS <- matrix(betas_vector, nrow=2, ncol=n)
+    EPS <- matrix(epsilons_vector, 2, ncol=n,byrow=TRUE)
+
+    # expected values of count-distribution (combine fixed and random effects)
+    LAMBDA <- exp(X%*%BETAS +  X%*%EPS)
+    
+    # loglikelihood
+    loglike <- sum(dpois(
+        x=as.numeric(Y), # vectorize observations
+        lambda=as.numeric(LAMBDA), # vectorize expectations
+        log=TRUE
+    ))
+
+    # normal prior on betas
+    log_prior <- dnorm(
+        x=x_target,
+        mean=0,
+        sd=sigmas[prior_parameters$which_sigma_idx], # notice how we grab sigma 
+        log=TRUE
+    )
+    return(loglike + log_prior)}
+```
+
+See the full script in `demos/demo_random-effects.R`
+
+In contrast, JAGS mixes much worse and has higher-variance estimates that are less accurate. The _Flexible-R-SliceSampler_ does much better than JAGS for random-effects models... But it can be tricky to code it up properly.
 
 
 ## CITATION
