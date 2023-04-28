@@ -12,9 +12,11 @@ Be sure to check out our examples in `demos/`. And be sure to read about the key
 
 - `src/flexible_slice_sampler.R` - source code with flexible slice sampler
 - `src/example_log-posteriors.R` - some example log-posteriors to inspire you to craft your own log-posteriors
-- `demo/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso ($\ell_1$-regularization)
-- `demo/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
-- `demo/demo_data-imputation.R` - script demonstrating dynamic data imputation
+- `demos/demo_multivariate_regression_with_student-t_priors.R` - script to demonstrate sparse Bayesian regression using Student-T priors -- in comparison with the Lasso ($\ell_1$-regularization)
+- `demos/demo_jags_vs_slice_zeroInflatedPoisson.R` - script to compare JAGS, for a Zero-Inflated Poisson model
+- `demos/random-effects.R` - script demonstrating random-effects and hierarchical models, and JAGS comparison, using a random-effects Poisson regression with half-student-t priors
+- `demos/demo_data-imputation.R` - script demonstrating dynamic data imputation
+
 
 ## Motivation: Why use Flexible-R-SliceSampler (vs. JAGS or BUGS)
 You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
@@ -34,6 +36,7 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - **Interweave Complex Processes** -you want to interweave complex R-processes in between vanilla MCMC  
     - e.g. let's say a part of your Gibbs-sampling depends on a Hidden-Markov-Model process that is unavailable in JAGS/BUGS, like sampling of HMM-states. You can sample from these states outside of the slice sampler using conventional HMM R-code, then run the Slice Sampler conditional on those states as "data", and repeat.
 - **BUGS/JAGS is annoying** - why code in BUGS/JAGS if you can do it better & faster in R?
+- **Poor mixing in BUGS/JAGS** - for random-effects models, the Flexible-R-SliceSampler mixes better and converges faster than BUGS/JAGS (see the random-effects models below).
 
 ### Reasons NOT to use Flexible-R-SliceSampler (vs. JAGS/BUGS)
 - You have a simple model with simple data that is easily run in JAGS/BUGS
@@ -292,6 +295,19 @@ for(j in 1:n_mcmc){
 }
 
 ```
+
+
+## EXAMPLE #3: Hierarchical Models / Random-Effects Models
+
+One advantage of the _Flexible-R-SliceSampler_  is with Hierarchical models and random-effects model -- with these models, the prior-parameters of one variable are themselves belonging to a distribution, which has a "Hyperprior" on top of it.
+
+In this example (`demo/demo_random-effectgs.R`), we demonstrate how to run a random-intercept and random-slope regression model: the grouping variable is `n=40` individuals, each with `T=4` observations. Each individual will have there own random-effects intercept and slope (`epsilon`). The random-effects come from a Normal distribution governmed by `sigma`, which itself has a hyperprior: a half-Student-T distribution that concentrates a lot of density around 0 (no variance among random-effects), but long-tails.
+
+We show that **JAGS mixes poorly and has high variance** for such random-effects models, when there isn't a lot of data. 
+
+In contrast, the _Flexible-R-SliceSampler_ mixes beautifully, and adapts easily, and more accurately producing lower-variance estimates.
+
+The only challenge with random-effects models in _Flexible-R-SliceSampler_ is passing the prior-parameters `sigma` for the random-effects: they are both a variable in `x.init` to sample, as well as parameter controlling other variables (the `epsilons`). Our solution is to just make the "prior parameters" of epsilons an index that grabs the sigmas from the `x` vector of dynamic variables.
 
 
 
