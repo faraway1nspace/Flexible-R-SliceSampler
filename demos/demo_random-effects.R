@@ -55,12 +55,12 @@ generate_fake_poisson_data <- function(seed=42,
     return(list(
         Y=matrix(y_true, T, n),
         X=X,
-        n=40, # grouping term (individuals)
-        T=4, # reps per indi
-        beta0=1.5, #intercept
-        beta1=0.4, # slope
-        sigma0=0.4, # root-variance in random-intercepts
-        sigma1=0.05 # root-variance in random-slo        
+        n=n, # grouping term (individuals)
+        T=T, # reps per indi
+        beta0=beta0, #intercept
+        beta1=beta1, # slope
+        sigma0=sigma0, # root-variance in random-intercepts
+        sigma1=sigma1 # root-variance in random-slo        
     ))
 }
 
