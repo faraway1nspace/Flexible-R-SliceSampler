@@ -154,13 +154,12 @@ list_of_log_posteriors[['sigma']] <- log_posterior_regression_with_uniform_prior
 
 ####################
 # OTHER PARAMETERS FOR SLICE (upper bounds, lower bounds)
-x.uppb <- rep(30,n_par)
-x.lowb <- rep(-30,n_par); x.lowb['sigma']<-0.0000001
+x.uppb <- setNames(rep(30,n_par), nm=names(x.init))
+x.lowb <- setNames(rep(-30,n_par),nm=names(x.init));
+x.lowb['sigma']<-0.0000001
 
 # W is a key hyperparameter governing the efficiency of the Slice Sampler see details
 w.slice <- rep(0.40, n_par)
-
-
 
 ##########
 # SAMPLE
