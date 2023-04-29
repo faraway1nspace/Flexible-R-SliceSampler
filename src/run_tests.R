@@ -35,7 +35,7 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     # number of parameters to sample
     npar <- length(x.init)
 
-                                        # CHECK 1: classes of arguments
+    ## CHECK 1: classes of arguments
     check <- try(stopifnot(class(list_of_log_posteriors)=='list'))
     if(class(check) == "try-error"){
         print(sprintf('`list_of_log_posteriors` should be a list of functions, not %s',class(list_of_log_posteriors)))
@@ -50,33 +50,51 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     
     check <- try(stopifnot(class(x.init)=='numeric'))
     if(class(check) == "try-error"){
-        print('`x.init` should be a numeric vector of initial guesses of the values of the variables you are trying to sample')
+        stop('`x.init` should be a numeric vector of initial guesses of the values of the variables you are trying to sample')
     }
     
     check <- try(stopifnot(class(data_likelihood)=='list'))
-    if(class(check) == "try-error"){ print('`data_likelihood` should be list') }
+    if(class(check) == "try-error"){ stop('`data_likelihood` should be list') }
 
     check <- try(stopifnot(class(prior_parameters_list)=='list'))
-    if(class(check) == "try-error"){ print('`prior_parameters_list` should be list of prior parametres') }
+    if(class(check) == "try-error"){ stop('`prior_parameters_list` should be list of prior parametres') }
     
     check <- try(stopifnot(as.integer(nslice)==nslice))
-    if(class(check) == "try-error"){ print('`nslice` should be an integer, number of samples to take of x') }
-
+    if(class(check) == "try-error"){ stop('`nslice` should be an integer, number of samples to take of x') }
 
     check <- try(stopifnot(as.integer(thin)==thin))
-    if(class(check) == "try-error"){ print('`thin` should be an integer, number of MCMC steps in between accepting a sample') }
+    if(class(check) == "try-error"){ stop('`thin` should be an integer, number of MCMC steps in between accepting a sample') }
 
     check <- try(stopifnot(class(x.lowb)=='numeric'))
-    if(class(check) == "try-error"){ print('`x.lowb` should be a numeric vector, the sensible lower bounds of values for each variable in x') }    
+    if(class(check) == "try-error"){ stop('`x.lowb` should be a numeric vector, the sensible lower bounds of values for each variable in x') }    
 
     check <- try(stopifnot(class(x.uppb)=='numeric'))
-    if(class(check) == "try-error"){ print('`x.uppb` should be a numeric vector, the sensible upper bounds of values for each variable in x') }    
+    if(class(check) == "try-error"){ stop('`x.uppb` should be a numeric vector, the sensible upper bounds of values for each variable in x') }    
 
     check <- try(stopifnot(class(w)=='numeric'))
-    if(class(check) == "try-error"){ print('`w` should be a numeric vector, the stepwise per parametres') }
+    if(class(check) == "try-error"){ stop('`w` should be a numeric vector, the stepwise per parametres') }
 
     check <- try(stopifnot(as.integer(m)==m))
-    if(class(check) == "try-error"){ print('`m` should be an integer, the number of steps to move a stepsize of `w` to find boundaries of density') }
+    if(class(check) == "try-error"){ stop('`m` should be an integer, the number of steps to move a stepsize of `w` to find boundaries of density') }
+
+    check <- try(stopifnot(w_auto_adjust_factor>0 & w_auto_adjust_factor<1.0))
+    if(class(check) == "try-error"){ stop('`w_auto_adjust_factor` should be >0 and <1') }
+
+    ## CHECK 2: LENGTHS of variables
+    check <- try(stopifnot(length(x.init)==length(list_of_log_posteriors)))
+    if(class(check) == "try-error"){ stop('`x.init` and `list_of_log_posteriors` should have the same length (an entry for each variable to estimate)')}
+
+    check <- try(stopifnot(length(x.init)==length(prior_parameters_list)))
+    if(class(check) == "try-error"){ stop('`x.init` and `prior_parameters_list` should have the same length (an entry for each variable to estimate)')}
+
+    check <- try(stopifnot(length(x.init)==length(x.lowb)))
+    if(class(check) == "try-error"){ stop('`x.init` and `w.lowb` should have the same length (an entry for each variable to estimate)')}
+
+    check <- try(stopifnot(length(x.init)==length(x.uppb)))
+    if(class(check) == "try-error"){ stop('`x.init` and `w.uppb` should have the same length (an entry for each variable to estimate)')}    
+
+    check <- try(stopifnot(length(x.init)==length(w)))
+    if(class(check) == "try-error"){ stop('`x.init` and `w` should have the same length (an entry for each variable to estimate)')}    
     
 }
 # TODO check that arguments of each log-posterior function are x_target, x_all, except    
