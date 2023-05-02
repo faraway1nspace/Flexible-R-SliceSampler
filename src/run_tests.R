@@ -77,6 +77,9 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     check <- try(stopifnot(as.integer(m)==m))
     if(class(check) == "try-error"){ stop('`m` should be an integer, the number of steps to move a stepsize of `w` to find boundaries of density') }
 
+    check <- try(stopifnot((m<=20 & m>=8)))
+    if(class(check) == "try-error"){ warning(sprintf('Good values for `m` tend to be in the range of 10-12, please double check your value for `m`. Proceeding with value %d',m)) }
+    
     check <- try(stopifnot(w_auto_adjust_factor>0 & w_auto_adjust_factor<1.0))
     if(class(check) == "try-error"){ stop('`w_auto_adjust_factor` should be >0 and <1') }
 
@@ -96,9 +99,8 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     check <- try(stopifnot(length(x.init)==length(w)))
     if(class(check) == "try-error"){ stop('`x.init` and `w` should have the same length (an entry for each variable to estimate)')}
 
-
     ## check for NAs
-    check <- try(stopifnot(all( all(all(!is.na(x.init)), all(!is.na(x.uppb)), all(!is.na(x.lowb))))))
+    check <- try(stopifnot(all( all(all(!is.na(x.init)), all(!is.na(x.uppb)), all(!is.na(x.lowb)), all(!is.na(w))))))
     if(class(check) == "try-error"){ stop('NAs in x.init or x.lowb or x.uppb. Please set with real values') }
 
     ## check min and max bounds on x
@@ -110,6 +112,27 @@ check_args_and_data <- function(x.init, # initial estimates of variables
 
     check <- try(stopifnot( all(x.lowb <= x.init) ))
     if(class(check) == "try-error"){ stop('`x.lowb` should be less than or equal to `x.init`')}
+
+    ## check slice sizes
+    check <- try(stopifnot( all(w < (x.uppb - x.lowb))))
+    if(class(check) == "try-error"){ stop('`w` should be much lower than `x.uppb-x.lowb`')}
+    
+    ## check slice sizes
+    check <- try(stopifnot( all(w < (x.uppb - x.lowb)/2)))
+    if(class(check) == "try-error"){
+        is_high_values_of_w <- which(w >= (x.uppb - x.lowb)/2)
+        nm_haigh_values_of_w <- names(is_high_values_of_w)
+        if(!is.null(nm_haigh_values_of_w)){
+            offending_variables <- paste0(nm_haigh_values_of_w,collapse=',')
+            warning(sprintf('Values for `w` seem TOO LARGE for these variables:%s. Please reduce either `w` or check x.lowb and x.upp have a large enough spread.',offending_variables))
+        } else {
+            offending_variables <- paste0(is_high_values_of_w,collapse=',')
+            warning(sprintf('Values for `w` seem TOO LARGE for these elements:%s. Please reduce either `w` or check x.lowb and x.upp have a large enough spread.',offending_variables))
+        }
+    }
+
+    # run each posterior
+    
 
     ## SUCCESS exit
     print('SUCCESS: Passed checks on inputs and priors. Be sure to set `do_checks=FALSE` for future runs on the same data and priors.')
