@@ -11,7 +11,7 @@ check_args_and_data <- function(x.init, # initial estimates of variables
                          x.uppb=rep(10^6, length(x.init)),  # sensible upper bounds on variables
                          w=rep(3.0,length(x.init)),
                          m=10, # steps to shift W
-                         pass.counter=1000,
+                         pass.counter=1000,  #
                          w_auto_adjust=TRUE, # whether to auto-adjust w
                          w_auto_adjust_factor=0.8, # auto-adjustment factor
                          print_interval=100  # print interval                       
@@ -94,7 +94,25 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     if(class(check) == "try-error"){ stop('`x.init` and `w.uppb` should have the same length (an entry for each variable to estimate)')}    
 
     check <- try(stopifnot(length(x.init)==length(w)))
-    if(class(check) == "try-error"){ stop('`x.init` and `w` should have the same length (an entry for each variable to estimate)')}    
+    if(class(check) == "try-error"){ stop('`x.init` and `w` should have the same length (an entry for each variable to estimate)')}
+
+
+    ## check for NAs
+    check <- try(stopifnot(all( all(all(!is.na(x.init)), all(!is.na(x.uppb)), all(!is.na(x.lowb))))))
+    if(class(check) == "try-error"){ stop('NAs in x.init or x.lowb or x.uppb. Please set with real values') }
+
+    ## check min and max bounds on x
+    check <- try(stopifnot( all(x.lowb < x.uppb) ))
+    if(class(check) == "try-error"){ stop('`x.lowb` should be much lower than `x.uppb`')}
+
+    check <- try(stopifnot( all(x.init <= x.uppb) ))
+    if(class(check) == "try-error"){ stop('`x.init` should be less than or equal to `x.uppb`')}
+
+    check <- try(stopifnot( all(x.lowb <= x.init) ))
+    if(class(check) == "try-error"){ stop('`x.lowb` should be less than or equal to `x.init`')}
+
+    ## SUCCESS exit
+    print('SUCCESS: Passed checks on inputs and priors. Be sure to set `do_checks=FALSE` for future runs on the same data and priors.')
     
 }
 # TODO check that arguments of each log-posterior function are x_target, x_all, except    
