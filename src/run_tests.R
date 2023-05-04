@@ -133,8 +133,6 @@ check_args_and_data <- function(x.init, # initial estimates of variables
 
     ## Check the argument names of the log-posteriors
     ## Ensure each log-postior has argument names: x_target,x_all,data_likelihood,prior_parameters
-    
-    # run each posterior
     names_of_expected_arguments <- c('x_target','x_all','data_likelihood','prior_parameters')
     which_misnamed <- numeric(0)
     for(i in 1:length(x.init)){
@@ -144,6 +142,39 @@ check_args_and_data <- function(x.init, # initial estimates of variables
     }
     if(length(which_misnamed)>0){
         stop(sprintf("Unexpected argument names for elements %s in `list_of_log_posteriors`: expected %s", paste(which_misnamed,collapse=','), paste(names_of_expected_arguments,collapse=', ')))
+    }
+
+    ## Check each posterior function at x.init
+    points_to_check <- x.init
+    which_failed <- c()
+    for(i in 1:length(points_to_check)){
+        check <- try( out<-list_of_log_posteriors[[i]]( x_target=points_to_check[[i]], x_all=points_to_check, data_likelihood=data_likelihood, prior_parameters=prior_parameters_list[[i]] ))
+        if( (class(check) == "try-error") | is.na(out) | is.null(out) ){ which_failed <- c(which_failed, i); print(sprintf('list_of_log_posteriors[[%d]] fails to compute at x.init[[%d]]: please check',i,i)) }
+    }
+    if (length(which_failed)){
+        stop(sprintf("Cannot compute `list_of_log_posteriors` at values in `x.init`. Check elements: %s", paste(which_failed,collapse=',')))
+    }
+
+    ## Check each posterior function at x.lowb
+    points_to_check <- x.lowb
+    which_failed <- c()
+    for(i in 1:length(points_to_check)){
+        check <- try( out<-list_of_log_posteriors[[i]]( x_target=points_to_check[[i]], x_all=points_to_check, data_likelihood=data_likelihood, prior_parameters=prior_parameters_list[[i]] ))
+        if( (class(check) == "try-error") | is.na(out) | is.null(out) ){ which_failed <- c(which_failed, i); print(sprintf('list_of_log_posteriors[[%d]] fails to compute at x.lowb[[%d]]: please check',i,i)) }
+    }
+    if (length(which_failed)){
+        stop(sprintf("Cannot compute `list_of_log_posteriors` at values in `x.lowb`. Check elements: %s", paste(which_failed,collapse=',')))
+    }
+
+    ## Check each posterior function at x.uppb
+    points_to_check <- x.uppb
+    which_failed <- c()
+    for(i in 1:length(points_to_check)){
+        check <- try( out<-list_of_log_posteriors[[i]]( x_target=points_to_check[[i]], x_all=points_to_check, data_likelihood=data_likelihood, prior_parameters=prior_parameters_list[[i]] ))
+        if( (class(check) == "try-error") | is.na(out) | is.null(out) ){ which_failed <- c(which_failed, i); print(sprintf('list_of_log_posteriors[[%d]] fails to compute at lower-bounds x.lowb[[%d]]: please check',i,i)) }
+    }
+    if (length(which_failed)){
+        stop(sprintf("Cannot compute `list_of_log_posteriors` at values in upper-bounds `x.uppb`. Check elements: %s", paste(which_failed,collapse=',')))
     }
     
     ## SUCCESS exit
