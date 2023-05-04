@@ -131,9 +131,21 @@ check_args_and_data <- function(x.init, # initial estimates of variables
         }
     }
 
-    # run each posterior
+    ## Check the argument names of the log-posteriors
+    ## Ensure each log-postior has argument names: x_target,x_all,data_likelihood,prior_parameters
     
-
+    # run each posterior
+    names_of_expected_arguments <- c('x_target','x_all','data_likelihood','prior_parameters')
+    which_misnamed <- numeric(0)
+    for(i in 1:length(x.init)){
+        names_of_arguments <- names(formals(list_of_log_posteriors[[i]]))        
+        check <- try(stopifnot( all(names_of_expected_arguments%in%names_of_arguments) ))
+        if(class(check) == "try-error"){ which_misnamed<-c(which_misnamed, i)}
+    }
+    if(length(which_misnamed)>0){
+        stop(sprintf("Unexpected argument names for elements %s in `list_of_log_posteriors`: expected %s", paste(which_misnamed,collapse=','), paste(names_of_expected_arguments,collapse=', ')))
+    }
+    
     ## SUCCESS exit
     print('SUCCESS: Passed checks on inputs and priors. Be sure to set `do_checks=FALSE` for future runs on the same data and priors.')
     
