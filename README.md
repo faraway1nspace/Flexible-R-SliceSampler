@@ -24,12 +24,12 @@ You should use this flexibl R-based Slice Sampler for Bayesian analysis if:
 - **Matrix Operations** - these are cumbersome in JAGS but can be easy and optimized in R  
 - **Novel Distributions** - if you need a distribution that is not supported in JAGS/BUGS/STAN  
     - whatever probability distribution you code in R, you can use in this Slice Sampler
-- **Intractible Priors** - you have an intractible Prior distribution (and likewise intractible posterior) that can't be normalized  
-    - for example, one of our priors was a _mixture distribution_ based on the outputs from  *another* independent model. You can pipe-in any external info you want, so long as you can code-it in R and can sample from it with a `dfunction`-type of log-density.
-- **Penalities on Derived Quantities** - you want to calculate derived quantities, and place priors on them
-    - you want to penalize some quantity that is a *derivative* of your process-parameters
-	- e.g., in ecology's mark-recapture, we often have prior information on derivatives of our statistical models (like we know the population-size isn't 0 nor is it 10000) but these quantities are derivatives, often *not* direct parameters in our likelihood.
-	- regulation can also be thought-of as a penalty on derviative quantities (the $\ell_1$-norm of parameters). See the demos.
+- **Intractible Priors** - if you have an intractible Prior distribution (and likewise intractible posterior) that can't be normalized -- this isn't an issue for this Slice Sampler 
+    - for example, in one of our studies, our priors were a _mixture distribution_ based on the outputs from  *another* independent model.
+    - With this slice sampler, you can pipe-in any external info you want, so long as you can code it in R and can sample from it with a `dfunction`-type of log-density.
+- **Penalities on Derived Quantities** - you want to calculate derived quantities and place priors on them, i.e., place a penalty on quantity that is a *derivative* of your process-parameters
+	- e.g., in ecological mark-recapture models, we often have prior information on derivatives of our statistical models (like we know the population-size isn't 0 nor is it 10000) but these quantities are derivatives, often *not* direct parameters in our likelihood.
+	- regularization can also be thought-of as a penalty on derviative quantities (the $\ell_1$-norm of parameters). See the demos.
 - **Missing Data Imputation** - we can do subsampling or random-inputation, per MCMC iteration.  
     - changing the data is illegal in JAGS, but here we can flexibly subsample or impute the data for each MCMC iteration.  
 	- because everything is R-based, you can run the slice sampler for a few iterations, then run a subsampling/imputation step outside the function, and then continue with the slice-sampler. This R-based Gibbs-routine opens-up lots of possibilities.
